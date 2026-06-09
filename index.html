@@ -1,0 +1,1291 @@
+<!doctype html>
+<html lang="ar" dir="rtl"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>لوحة الإدارة | نظام إدارة التعلم المتقدم</title> 
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script> 
+    <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Cairo', 'sans-serif'] }, colors: { admin: '#0f172a', primary: '#2563eb', accent: '#10b981' } } } }</script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet"> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script> 
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; overflow-x: hidden; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .adm-tab { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .adm-tab.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(100%); } .sidebar.open { transform: translateX(0); } .main-content { margin-right: 0 !important; } }
+        
+        .side-btn { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-radius: 1rem; color: #94a3b8; font-weight: 700; transition: all 0.2s; margin-bottom: 0.5rem; border: 1px solid transparent; }
+        .side-btn:hover { background-color: #1e293b; color: #f8fafc; border-color: #334155; }
+        .side-btn.active { background-color: #2563eb; color: #ffffff; box-shadow: 0 10px 25px -5px rgba(37,99,235,0.4); border-color: #3b82f6; }
+        
+        .badge-new { background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 900; }
+        
+        .stagger-animation > * { opacity: 0; animation: fadeIn 0.4s forwards; }
+        .stagger-animation > *:nth-child(1) { animation-delay: 0.05s; }
+        .stagger-animation > *:nth-child(2) { animation-delay: 0.1s; }
+        .stagger-animation > *:nth-child(3) { animation-delay: 0.15s; }
+        .stagger-animation > *:nth-child(4) { animation-delay: 0.2s; }
+        .stagger-animation > *:nth-child(5) { animation-delay: 0.25s; }
+        .stagger-animation > *:nth-child(6) { animation-delay: 0.3s; }
+        .stagger-animation > *:nth-child(7) { animation-delay: 0.35s; }
+        .stagger-animation > *:nth-child(8) { animation-delay: 0.4s; }
+    </style> 
+</head> 
+<body class="text-slate-800 flex h-screen overflow-hidden"> 
+
+    <div id="toast-notification" class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl text-white font-bold min-w-[300px] justify-center transition-all duration-300 transform -translate-y-32"> 
+        <i id="toast-icon" class="text-xl"></i> <span id="toast-msg"></span> 
+    </div> 
+
+    <div id="login-view" class="fixed inset-0 bg-slate-900 z-[99999] flex justify-center items-center p-4"> 
+        <div class="bg-white p-10 md:p-14 rounded-[3rem] shadow-2xl w-full max-w-md text-center relative overflow-hidden"> 
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-accent"></div>
+            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border-4 border-slate-100 -mt-4"> <i class="fas fa-shield-alt text-4xl text-admin"></i> </div> 
+            <h2 class="text-3xl font-black mb-2 text-slate-800">إدارة المنصة</h2> 
+            <p class="text-slate-500 font-bold mb-8 text-sm">تسجيل الدخول المحمي للمشرفين</p>
+            <div class="space-y-4"> 
+                <input type="email" id="adm-email" placeholder="البريد الإلكتروني" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-primary text-center transition-colors bg-slate-50"> 
+                <input type="password" id="adm-pass" placeholder="كلمة المرور" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-primary text-center transition-colors bg-slate-50"> 
+                <button type="button" id="login-btn" onclick="app.login(event)" class="w-full bg-admin text-white py-4 rounded-xl font-black shadow-xl hover:bg-black transition-all text-lg mt-4">تسجيل الدخول</button> 
+            </div> 
+        </div> 
+    </div> 
+
+    <div id="panel-view" class="hidden w-full h-full flex bg-slate-100">
+        
+        <aside id="sidebar" class="sidebar fixed right-0 top-0 h-full w-72 bg-admin text-white shadow-[0_0_40px_rgba(0,0,0,0.1)] flex flex-col overflow-y-auto no-scrollbar">
+            <div class="p-8 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-admin/95 backdrop-blur z-10">
+                <h2 class="text-3xl font-black flex items-center gap-3"><i class="fas fa-crown text-yellow-400"></i> لوحة الإدارة</h2>
+                <button onclick="admin.toggleSidebar()" class="md:hidden w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-300 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <nav class="flex-1 p-5 overflow-y-auto no-scrollbar">
+                <p class="text-xs font-black text-slate-500 mb-4 px-4 tracking-wider">الإعدادات والتحكم</p>
+                <button onclick="admin.switchTab('settings')" class="side-btn active w-full text-right"><i class="fas fa-cogs w-6 text-center text-slate-300"></i> إعدادات المنصة</button>
+                <button onclick="admin.switchTab('visibility')" class="side-btn w-full text-right relative"><i class="fas fa-eye w-6 text-center text-emerald-400"></i> شجرة إخفاء المحتوى <span class="badge-new">مهم</span></button>
+                
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4 tracking-wider">المحتوى التعليمي</p>
+                <button onclick="admin.switchTab('lessons')" class="side-btn w-full text-right"><i class="fas fa-video w-6 text-center text-indigo-400"></i> الدروس والمناهج</button>
+                <button onclick="admin.switchTab('quizzes')" class="side-btn w-full text-right"><i class="fas fa-file-signature w-6 text-center text-blue-400"></i> الاختبارات الشاملة</button>
+                <button onclick="admin.switchTab('simulations')" class="side-btn w-full text-right"><i class="fas fa-stopwatch w-6 text-center text-yellow-400"></i> محاكيات الامتحانات</button>
+                
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4 tracking-wider">الميزات المتقدمة <span class="badge-new">جديد</span></p>
+                <button onclick="admin.switchTab('leaderboard-mgmt')" class="side-btn w-full text-right"><i class="fas fa-trophy w-6 text-center text-amber-400"></i> إدارة المتصدرين</button>
+                <button onclick="admin.switchTab('live-sessions-mgmt')" class="side-btn w-full text-right"><i class="fas fa-broadcast-tower w-6 text-center text-red-400"></i> غرف البث المباشر</button>
+                <button onclick="admin.switchTab('community-mgmt')" class="side-btn w-full text-right"><i class="fas fa-users w-6 text-center text-purple-400"></i> إدارة المجتمع</button>
+                
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4 tracking-wider">الطلاب والمجتمع</p>
+                <button onclick="admin.switchTab('users')" class="side-btn w-full text-right"><i class="fas fa-users-cog w-6 text-center text-teal-400"></i> إدارة الطلاب</button>
+                <button onclick="admin.switchTab('posts')" class="side-btn w-full text-right"><i class="fas fa-newspaper w-6 text-center text-orange-400"></i> الأخبار والمنشورات</button>
+                <button onclick="admin.switchTab('announcements')" class="side-btn w-full text-right"><i class="fas fa-bullhorn w-6 text-center text-rose-400"></i> إعلانات البوب أب</button>
+            </nav>
+
+            <div class="p-6 border-t border-slate-800 bg-slate-900/50">
+                <button onclick="app.logout()" class="w-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3">
+                    <i class="fas fa-power-off text-lg"></i> تسجيل الخروج
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content flex-1 h-full overflow-y-auto mr-0 md:mr-72 transition-all duration-300 relative">
+            
+            <header class="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200 sticky top-0 z-40 p-4 md:px-8 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <button onclick="admin.toggleSidebar()" class="md:hidden w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors"><i class="fas fa-bars text-xl"></i></button>
+                    <h2 class="font-black text-2xl text-slate-800" id="top-title">إعدادات المنصة</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="student.html" target="_blank" class="hidden md:flex bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-2.5 rounded-xl font-black text-sm items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"><i class="fas fa-external-link-alt"></i> فتح لوحة الطالب</a>
+                    <div class="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold shadow-md"><i class="fas fa-user-shield text-xl"></i></div>
+                </div>
+            </header>
+
+            <div class="p-4 md:p-8 max-w-7xl mx-auto pb-24">
+                
+                <!-- ==================== TAB: SETTINGS ==================== -->
+                <div id="tab-settings" class="adm-tab active space-y-8"> 
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                        <h3 class="font-black text-2xl mb-6 text-slate-800 flex items-center gap-3 border-b border-slate-100 pb-4"><i class="fas fa-paint-brush text-primary bg-blue-50 p-3 rounded-xl"></i> الهوية ومعلومات المنصة</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> 
+                            <div><label class="font-bold text-sm text-slate-500 mb-2 block">اسم المنصة:</label><input id="set-site-name" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-primary transition-colors bg-slate-50"></div>
+                            <div><label class="font-bold text-sm text-slate-500 mb-2 block">واتساب التواصل (بدون +):</label><input id="set-whatsapp" placeholder="201xxxxxxxxx" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-primary transition-colors bg-slate-50" dir="ltr"></div>
+                            <div class="md:col-span-2"><label class="font-bold text-sm text-slate-500 mb-2 block">رابط لوجو المنصة:</label><input id="set-site-logo" placeholder="https://..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-primary transition-colors bg-slate-50" dir="ltr"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-50 p-8 rounded-[2rem] border border-indigo-100 shadow-sm">
+                        <h3 class="font-black text-2xl mb-6 text-indigo-900 flex items-center gap-3 border-b border-indigo-200 pb-4"><i class="fas fa-robot text-indigo-500 bg-white p-3 rounded-xl shadow-sm"></i> محرك الذكاء الاصطناعي (Gemini)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="font-bold text-sm text-indigo-700 mb-2 block">مفتاح الـ API:</label>
+                                <input id="set-api-key" placeholder="AIzaSy..." class="w-full border-2 border-indigo-200 p-4 rounded-xl font-bold text-left outline-none bg-white focus:border-indigo-500 transition-colors" dir="ltr">
+                                <button onclick="admin.fetchModels()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-black shadow-md transition-all text-sm mt-3"><i class="fas fa-sync-alt ml-1"></i> فحص وجلب النماذج</button>
+                            </div>
+                            <div>
+                                <label class="font-bold text-sm text-indigo-700 mb-2 block">النموذج المعتمد لتوليد الأسئلة:</label>
+                                <select id="set-ai-model" class="w-full border-2 border-indigo-200 p-4 rounded-xl font-bold outline-none text-left bg-white transition-colors" dir="ltr"><option value="">-- اضغط فحص أولاً --</option></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                        <h3 class="font-black text-2xl mb-6 text-slate-800 flex items-center gap-3 border-b border-slate-100 pb-4"><i class="fas fa-file-contract text-emerald-500 bg-emerald-50 p-3 rounded-xl"></i> الصفحات الثابتة (Footer)</h3>
+                        <div class="space-y-6">
+                            <div><label class="font-bold text-sm text-slate-500 mb-2 block">صفحة "من نحن":</label><textarea id="set-about" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-primary transition-colors bg-slate-50"></textarea></div>
+                            <div><label class="font-bold text-sm text-slate-500 mb-2 block">صفحة "شروط الاستخدام":</label><textarea id="set-terms" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-primary transition-colors bg-slate-50"></textarea></div>
+                            <div><label class="font-bold text-sm text-slate-500 mb-2 block">صفحة "سياسة الخصوصية":</label><textarea id="set-privacy" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-primary transition-colors bg-slate-50"></textarea></div>
+                        </div>
+                    </div>
+                    
+                    <div class="sticky bottom-6 z-40 bg-white/90 backdrop-blur-md p-4 rounded-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] border border-slate-200">
+                        <button onclick="admin.saveSettings()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-black transition-transform hover:-translate-y-1 text-xl"><i class="fas fa-save ml-2"></i> حفظ جميع الإعدادات</button>
+                    </div>
+                </div> 
+
+                <!-- ==================== TAB: VISIBILITY ==================== -->
+                <div id="tab-visibility" class="adm-tab space-y-8">
+                    <div class="bg-gradient-to-r from-rose-500 to-orange-500 p-8 rounded-[2.5rem] text-white shadow-xl flex flex-col md:flex-row items-center gap-6 text-center md:text-right relative overflow-hidden">
+                        <i class="fas fa-eye-slash text-7xl opacity-20 absolute -left-4 -bottom-4"></i>
+                        <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-sm"><i class="fas fa-eye-slash text-4xl"></i></div>
+                        <div class="relative z-10">
+                            <h3 class="text-3xl font-black mb-2">محرك الإخفاء الذكي</h3>
+                            <p class="text-base font-bold opacity-90 leading-relaxed">اختر القسم بدقة من القوائم بالأسفل واضغط إخفاء. سيختفي فوراً من لوحة الطالب دون التأثير على الباقي.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-xl mb-6 flex items-center gap-2 border-b pb-4"><i class="fas fa-filter text-primary"></i> حدد العنصر المراد إخفاؤه أو إظهاره:</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 mb-1 block">1. نوع التعليم</label>
+                                <select id="vis-type" class="w-full border-2 p-3 rounded-xl font-bold outline-none" onchange="admin.updateVisHierarchy()">
+                                    <option value="public">تربية وتعليم</option><option value="azhar">أزهر شريف</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 mb-1 block">2. المرحلة</label>
+                                <select id="vis-stage" class="w-full border-2 p-3 rounded-xl font-bold outline-none" onchange="admin.updateVisHierarchy()">
+                                    <option value="primary">الابتدائية</option><option value="prep">الإعدادية</option><option value="sec">الثانوية</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 mb-1 block">3. الصف</label>
+                                <select id="vis-grade" class="w-full border-2 p-3 rounded-xl font-bold outline-none" onchange="admin.updateVisHierarchy()"></select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 mb-1 block">4. المادة</label>
+                                <select id="vis-subject" class="w-full border-2 p-3 rounded-xl font-bold outline-none"></select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <button onclick="admin.toggleVisibility('type')" class="bg-slate-800 text-white p-3 rounded-xl font-bold hover:bg-black transition-colors text-sm shadow-md">إخفاء/إظهار النوع كاملاً</button>
+                            <button onclick="admin.toggleVisibility('stage')" class="bg-slate-700 text-white p-3 rounded-xl font-bold hover:bg-slate-800 transition-colors text-sm shadow-md">إخفاء/إظهار المرحلة</button>
+                            <button onclick="admin.toggleVisibility('grade')" class="bg-slate-600 text-white p-3 rounded-xl font-bold hover:bg-slate-700 transition-colors text-sm shadow-md">إخفاء/إظهار الصف</button>
+                            <button onclick="admin.toggleVisibility('subject')" class="bg-primary text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition-colors text-sm shadow-md">إخفاء/إظهار المادة فقط</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-xl mb-6 text-red-600 flex items-center gap-2 border-b pb-4"><i class="fas fa-list-ul"></i> قائمة العناصر المخفية حالياً عن الطلاب</h4>
+                        <div id="hidden-items-list" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB: LESSONS ==================== -->
+                <div id="tab-lessons" class="adm-tab space-y-8"> 
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-indigo-500 relative"> 
+                        <div class="flex justify-between items-center mb-8 border-b pb-4">
+                            <h4 class="font-black text-3xl text-indigo-900" id="l-form-title">إضافة درس جديد</h4>
+                            <button onclick="admin.resetLessonForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm flex items-center gap-2"><i class="fas fa-redo"></i> إفراغ الحقول</button>
+                        </div>
+
+                        <div class="bg-indigo-50 p-6 rounded-2xl mb-8 border border-indigo-100">
+                            <h5 class="text-sm font-black text-indigo-700 mb-4 flex items-center gap-2"><i class="fas fa-map-marker-alt"></i> مكان الدرس في المنصة:</h5>
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3"> 
+                                <select id="l-type" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-indigo-300 shadow-sm" onchange="admin.updateHierarchy('l')"><option value="public">تربية وتعليم</option><option value="azhar">أزهر</option></select> 
+                                <select id="l-stage" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-indigo-300 shadow-sm" onchange="admin.updateHierarchy('l')"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select> 
+                                <select id="l-grade" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-indigo-300 shadow-sm"></select> 
+                                <select id="l-subject" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-indigo-300 shadow-sm"></select> 
+                                <select id="l-unit" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-indigo-300 shadow-sm">
+                                    <option value="1">الوحدة الأولى</option><option value="2">الوحدة الثانية</option><option value="3">الوحدة الثالثة</option><option value="4">الوحدة الرابعة</option><option value="5">الوحدة الخامسة</option><option value="6">الوحدة السادسة</option>
+                                </select> 
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                    <h5 class="font-black text-slate-800 flex items-center gap-2"><span class="bg-indigo-500 text-white w-6 h-6 rounded-md flex items-center justify-center text-xs">1</span> الشرح النصي</h5>
+                                    <button onclick="admin.generateAILesson()" id="btn-ai-lesson" class="bg-yellow-400 text-yellow-900 px-4 py-1.5 rounded-lg font-black shadow-sm hover:bg-yellow-500 transition-colors text-xs"><i class="fas fa-magic"></i> توليد AI</button>
+                                </div>
+                                <input id="l-title" placeholder="اكتب عنوان الدرس بدقة..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-black text-lg outline-none focus:border-indigo-500 transition-colors bg-slate-50"> 
+                                <textarea id="l-content" placeholder="محتوى الشرح والملخص..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-48 outline-none focus:border-indigo-500 transition-colors bg-slate-50 leading-loose"></textarea> 
+                            </div>
+                            
+                            <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 flex flex-col h-full">
+                                <h5 class="font-black text-blue-900 mb-5 flex items-center gap-2"><span class="bg-blue-500 text-white w-6 h-6 rounded-md flex items-center justify-center text-xs">2</span> فيديوهات الدرس</h5>
+                                <div class="flex flex-col gap-3 mb-5">
+                                    <input type="text" id="v-teacher" placeholder="اسم الأستاذ/ة" class="w-full border-2 border-white p-3.5 rounded-xl font-bold outline-none focus:border-blue-400 shadow-sm bg-white">
+                                    <input type="text" id="v-url" placeholder="رابط يوتيوب" class="w-full border-2 border-white p-3.5 rounded-xl text-left outline-none focus:border-blue-400 shadow-sm bg-white" dir="ltr">
+                                    <button onclick="admin.addVideoToTemp()" class="bg-blue-600 text-white py-3.5 rounded-xl font-black hover:bg-blue-700 transition-colors shadow-md mt-1"><i class="fas fa-plus ml-1"></i> إضافة الفيديو للقائمة</button>
+                                </div>
+                                <div id="temp-videos-list" class="space-y-2 flex-1 overflow-y-auto max-h-40 pr-2"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-50/50 p-6 md:p-8 rounded-[2rem] mb-8 border border-emerald-100">
+                            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 border-b border-emerald-200 pb-5">
+                                <h5 class="font-black text-emerald-900 flex items-center gap-2"><span class="bg-emerald-500 text-white w-6 h-6 rounded-md flex items-center justify-center text-xs">3</span> تدريبات تفاعلية للدرس</h5>
+                                <div class="flex gap-2 items-center bg-white p-1.5 rounded-xl border border-emerald-100 shadow-sm">
+                                    <label class="text-xs font-bold text-emerald-600 mr-2">عدد الأسئلة:</label>
+                                    <input type="number" id="l-ai-q-count" value="5" class="w-12 border-none text-center font-black outline-none bg-transparent p-0 text-emerald-800">
+                                    <button onclick="admin.generateAILessonQuestions()" id="btn-ai-l-quiz" class="bg-emerald-600 text-white px-5 py-2 rounded-lg font-black shadow-sm hover:bg-emerald-700 transition-colors text-sm"><i class="fas fa-robot"></i> توليد ذكي</button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3 mb-6 bg-white p-1.5 rounded-xl border border-slate-200 w-max mx-auto md:mx-0">
+                                <button onclick="document.getElementById('l-manual-add').classList.remove('hidden'); document.getElementById('l-bulk-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm hover:bg-slate-200 transition-colors">إضافة يدوية</button>
+                                <button onclick="document.getElementById('l-bulk-add').classList.remove('hidden'); document.getElementById('l-manual-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm hover:bg-slate-200 transition-colors">استيراد JSON</button>
+                            </div>
+
+                            <div id="l-manual-add" class="hidden space-y-4 mb-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                <div class="flex gap-2 mb-4">
+                                    <label class="text-xs font-bold text-slate-500">نوع السؤال:</label>
+                                    <select id="l-q-type" class="border-2 border-slate-100 p-2 rounded-lg text-sm font-bold" onchange="admin.toggleQuestionTypeFields('l')">
+                                        <option value="mcq">اختيار من متعدد</option>
+                                        <option value="essay">مقالي</option>
+                                        <option value="ordering">ترتيب</option>
+                                    </select>
+                                </div>
+                                <textarea id="l-q-text" placeholder="اكتب نص السؤال هنا..." class="w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none focus:border-emerald-400 bg-slate-50"></textarea>
+                                <div id="l-mcq-fields">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <input id="l-q-opt0" placeholder="أ" class="border-2 border-slate-100 p-3 rounded-xl font-bold bg-slate-50 focus:border-emerald-400 outline-none"><input id="l-q-opt1" placeholder="ب" class="border-2 border-slate-100 p-3 rounded-xl font-bold bg-slate-50 focus:border-emerald-400 outline-none">
+                                        <input id="l-q-opt2" placeholder="ج" class="border-2 border-slate-100 p-3 rounded-xl font-bold bg-slate-50 focus:border-emerald-400 outline-none"><input id="l-q-opt3" placeholder="د" class="border-2 border-slate-100 p-3 rounded-xl font-bold bg-slate-50 focus:border-emerald-400 outline-none">
+                                    </div>
+                                    <input id="l-q-ans" placeholder="الإجابة الصحيحة (نصاً)" class="w-full border-2 border-emerald-200 bg-emerald-50 p-4 rounded-xl text-center font-black outline-none focus:border-emerald-500 mt-3">
+                                </div>
+                                <div id="l-ordering-fields" class="hidden space-y-2">
+                                    <label class="text-xs font-bold text-slate-500">عناصر الترتيب (واحد في كل سطر - الترتيب الحالي هو الصحيح):</label>
+                                    <textarea id="l-q-order-items" rows="5" placeholder="العنصر الأول&#10;العنصر الثاني&#10;العنصر الثالث&#10;العنصر الرابع" class="w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none focus:border-emerald-400 bg-slate-50"></textarea>
+                                </div>
+                                <button onclick="admin.addQuestionToTemp('l')" class="w-full bg-slate-800 text-white py-3.5 rounded-xl font-black text-sm hover:bg-black transition-colors shadow-md mt-2">إضافة السؤال للامتحان</button>
+                            </div>
+
+                            <div id="l-bulk-add" class="hidden space-y-4 mb-6 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-sm">
+                                <p class="text-xs text-emerald-400 font-mono">Format: [{"text":"Question","opts":["A","B","C","D"],"correctAnswer":0,"type":"mcq"}]</p>
+                                <textarea id="l-bulk-json" placeholder='ضع كود الـ JSON هنا...' class="w-full h-32 bg-slate-800 text-blue-300 p-4 rounded-xl font-mono text-left outline-none border border-slate-700 focus:border-emerald-500" dir="ltr"></textarea>
+                                <button onclick="admin.addBulkQuestions('l')" class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-black text-sm hover:bg-emerald-500 transition-colors shadow-md mt-2">استيراد الأسئلة</button>
+                            </div>
+
+                            <div id="temp-l-questions-list" class="space-y-2 max-h-56 overflow-y-auto pr-2"></div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-4 mb-8">
+                            <label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border border-yellow-200 hover:bg-yellow-100 transition-colors">
+                                <input type="checkbox" id="l-locked" class="w-6 h-6 accent-yellow-500"> 
+                                <div><span class="font-black text-sm text-yellow-900 block"><i class="fas fa-crown"></i> محتوى VIP</span><span class="text-[10px] font-bold text-yellow-700">مغلق برقم سري للمشتركين</span></div>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border border-red-200 hover:bg-red-100 transition-colors">
+                                <input type="checkbox" id="l-hidden" class="w-6 h-6 accent-red-500"> 
+                                <div><span class="font-black text-sm text-red-900 block"><i class="fas fa-eye-slash"></i> إخفاء مؤقت</span><span class="text-[10px] font-bold text-red-700">لن يظهر للطالب حتى تزيل العلامة</span></div>
+                            </label>
+                        </div>
+
+                        <button id="l-save-btn" onclick="admin.saveLesson()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl shadow-[0_10px_20px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-transform hover:-translate-y-1"><i class="fas fa-paper-plane ml-2"></i> حفظ ونشر الدرس بالنظام</button> 
+                    </div> 
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-2xl text-slate-800 mb-8 border-b pb-4 flex items-center gap-3"><i class="fas fa-archive text-indigo-400"></i> أرشيف الدروس</h4>
+                        <div id="lessons-list-display" class="grid grid-cols-1 lg:grid-cols-2 gap-5 max-h-[700px] overflow-y-auto pr-2"></div>
+                    </div>
+                </div> 
+
+                <!-- ==================== TAB: QUIZZES ==================== -->
+                <div id="tab-quizzes" class="adm-tab space-y-8"> 
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-blue-500 relative"> 
+                        <div class="flex justify-between items-center mb-8 border-b pb-4">
+                            <h4 class="font-black text-3xl text-blue-900" id="q-form-title">إنشاء اختبار مستقل</h4>
+                            <button onclick="admin.resetQuizForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm flex items-center gap-2"><i class="fas fa-redo"></i> إفراغ الحقول</button>
+                        </div>
+
+                        <div class="bg-blue-50 p-6 rounded-2xl mb-8 border border-blue-100">
+                            <h5 class="text-sm font-black text-blue-700 mb-4 flex items-center gap-2"><i class="fas fa-map-marker-alt"></i> مسار الاختبار:</h5>
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3"> 
+                                <select id="q-type" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-blue-300" onchange="admin.updateHierarchy('q')"><option value="public">تربية وتعليم</option><option value="azhar">أزهر</option></select> 
+                                <select id="q-stage" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-blue-300" onchange="admin.updateHierarchy('q')"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select> 
+                                <select id="q-grade" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-blue-300"></select> 
+                                <select id="q-subject" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-blue-300"></select> 
+                                <select id="q-unit" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none focus:border-blue-300">
+                                    <option value="0">اختبار شامل/عام</option><option value="1">الوحدة الأولى</option><option value="2">الوحدة الثانية</option><option value="3">الوحدة الثالثة</option><option value="4">الوحدة الرابعة</option><option value="5">الوحدة الخامسة</option><option value="6">الوحدة السادسة</option>
+                                </select>
+                            </div>
+                        </div> 
+
+                        <div class="flex flex-col md:flex-row justify-between md:items-stretch gap-4 mb-8">
+                            <input id="q-title" placeholder="اسم الاختبار (مثل: امتحان الميدتيرم)" class="flex-1 border-2 border-slate-200 p-4 rounded-xl font-black outline-none focus:border-blue-500 text-xl bg-slate-50"> 
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-blue-100 shadow-sm shrink-0">
+                                <label class="text-xs font-black text-blue-800 ml-2 bg-blue-50 px-2 py-1 rounded">المولد الذكي:</label>
+                                <input type="number" id="q-ai-q-count" value="10" title="عدد الأسئلة" class="w-16 border-2 border-slate-100 rounded-lg p-2 text-center font-black text-sm outline-none focus:border-blue-400">
+                                <button onclick="admin.generateAIQuiz()" id="btn-ai-quiz" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-black shadow-md hover:bg-blue-700 transition-colors"><i class="fas fa-robot"></i> ابدأ</button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-slate-50 p-6 md:p-8 rounded-2xl mb-8 border border-slate-200">
+                            <div class="flex gap-3 mb-6 bg-white p-1.5 rounded-xl border border-slate-200 w-max mx-auto">
+                                <button onclick="document.getElementById('q-manual-add').classList.remove('hidden'); document.getElementById('q-bulk-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm hover:bg-slate-200 transition-colors">إضافة يدوية</button>
+                                <button onclick="document.getElementById('q-bulk-add').classList.remove('hidden'); document.getElementById('q-manual-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm hover:bg-slate-200 transition-colors">إضافة بـ JSON</button>
+                            </div>
+
+                            <div id="q-manual-add" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+                                <div class="flex gap-2 mb-4">
+                                    <label class="text-xs font-bold text-slate-500">نوع السؤال:</label>
+                                    <select id="q-q-type" class="border-2 border-slate-100 p-2 rounded-lg text-sm font-bold" onchange="admin.toggleQuestionTypeFields('q')">
+                                        <option value="mcq">اختيار من متعدد</option>
+                                        <option value="essay">مقالي</option>
+                                        <option value="ordering">ترتيب</option>
+                                    </select>
+                                </div>
+                                <textarea id="q-text" placeholder="اكتب نص السؤال هنا..." class="w-full border-2 border-slate-100 p-4 rounded-xl mb-4 font-bold outline-none focus:border-blue-400 bg-slate-50"></textarea>
+                                <div id="q-mcq-fields">
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
+                                        <input id="q-opt0" placeholder="أ" class="border-2 border-slate-100 p-3 rounded-xl font-bold focus:border-blue-400 outline-none"><input id="q-opt1" placeholder="ب" class="border-2 border-slate-100 p-3 rounded-xl font-bold focus:border-blue-400 outline-none">
+                                        <input id="q-opt2" placeholder="ج" class="border-2 border-slate-100 p-3 rounded-xl font-bold focus:border-blue-400 outline-none"><input id="q-opt3" placeholder="د" class="border-2 border-slate-100 p-3 rounded-xl font-bold focus:border-blue-400 outline-none">
+                                    </div>
+                                    <input id="q-ans" placeholder="الإجابة الصحيحة (نصاً)" class="w-full border-2 border-emerald-200 bg-emerald-50 p-4 rounded-xl text-center font-black mb-4 outline-none focus:border-emerald-500">
+                                </div>
+                                <div id="q-ordering-fields" class="hidden space-y-2 mb-4">
+                                    <label class="text-xs font-bold text-slate-500">عناصر الترتيب (واحد في كل سطر):</label>
+                                    <textarea id="q-q-order-items" rows="5" placeholder="العنصر الأول&#10;العنصر الثاني&#10;العنصر الثالث&#10;العنصر الرابع" class="w-full border-2 border-slate-100 p-4 rounded-xl font-bold outline-none focus:border-blue-400 bg-slate-50"></textarea>
+                                </div>
+                                <button onclick="admin.addQuestionToTemp('q')" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black hover:bg-black transition-colors text-lg shadow-md">إضافة السؤال للاختبار</button>
+                            </div>
+
+                            <div id="q-bulk-add" class="hidden bg-slate-900 p-6 md:p-8 rounded-2xl border border-slate-800 mb-6 shadow-inner">
+                                <p class="text-xs text-blue-400 mb-4 font-mono bg-slate-800 p-2 rounded-lg inline-block">Format: [{"text":"Question","opts":["A","B","C","D"],"correctAnswer":0,"type":"mcq"}]</p>
+                                <textarea id="q-bulk-json" placeholder="الصق مصفوفة الـ JSON هنا..." class="w-full h-40 bg-slate-800 text-blue-300 p-4 rounded-xl font-mono text-left outline-none focus:border-blue-500 border border-slate-700" dir="ltr"></textarea>
+                                <button onclick="admin.addBulkQuestions('q')" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black mt-4 hover:bg-blue-500 transition-colors shadow-md text-lg">استيراد الأسئلة</button>
+                            </div>
+
+                            <h5 class="font-black text-slate-800 mb-4 border-b border-slate-200 pb-2"><i class="fas fa-list-ol text-blue-500"></i> أسئلة الاختبار الحالية:</h5>
+                            <div id="temp-q-questions-list" class="space-y-3 max-h-64 overflow-y-auto pr-2"></div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-4 mb-8">
+                            <label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border border-yellow-200 hover:bg-yellow-100 transition-colors">
+                                <input type="checkbox" id="q-locked" class="w-6 h-6 accent-yellow-500"> 
+                                <div><span class="font-black text-sm text-yellow-900 block"><i class="fas fa-crown"></i> محتوى VIP</span><span class="text-[10px] font-bold text-yellow-700">مغلق برقم سري</span></div>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border border-red-200 hover:bg-red-100 transition-colors">
+                                <input type="checkbox" id="q-hidden" class="w-6 h-6 accent-red-500"> 
+                                <div><span class="font-black text-sm text-red-900 block"><i class="fas fa-eye-slash"></i> إخفاء مؤقت</span><span class="text-[10px] font-bold text-red-700">عدم النشر للطالب</span></div>
+                            </label>
+                        </div>
+
+                        <button id="q-save-btn" onclick="admin.saveQuiz()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xl shadow-[0_10px_20px_rgba(37,99,235,0.3)] hover:bg-blue-700 transition-transform hover:-translate-y-1"><i class="fas fa-paper-plane ml-2"></i> حفظ ونشر الاختبار</button>
+                    </div> 
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-2xl text-slate-800 mb-8 border-b pb-4 flex items-center gap-3"><i class="fas fa-archive text-blue-400"></i> أرشيف الاختبارات</h4>
+                        <div id="quizzes-list-display" class="grid grid-cols-1 lg:grid-cols-2 gap-5 max-h-[700px] overflow-y-auto pr-2"></div>
+                    </div>
+                </div> 
+
+                <!-- ==================== TAB: SIMULATIONS ==================== -->
+                <div id="tab-simulations" class="adm-tab space-y-8"> 
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-yellow-400 relative"> 
+                        <div class="flex justify-between items-center mb-8 border-b pb-4">
+                            <h3 class="font-black text-3xl text-yellow-900" id="sim-form-title">إنشاء محاكي امتحانات</h3> 
+                            <button onclick="admin.resetSimForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm flex items-center gap-2"><i class="fas fa-redo"></i> إفراغ</button>
+                        </div>
+                        
+                        <div class="space-y-8"> 
+                            <input id="sim-name" placeholder="اسم المحاكي (مثال: المحاكي الشامل لنصف العام)" class="w-full border-2 border-slate-200 p-5 rounded-xl font-black outline-none focus:border-yellow-400 text-xl bg-slate-50"> 
+                            
+                            <div class="bg-yellow-50/50 p-6 rounded-2xl border border-yellow-200">
+                                <h5 class="text-base font-black text-yellow-800 mb-5 flex items-center gap-2"><i class="fas fa-sliders-h"></i> إعدادات المحاكي الأساسية:</h5>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <select id="sim-type" class="border-2 border-white p-4 rounded-xl font-bold bg-white text-sm outline-none shadow-sm" onchange="admin.updateHierarchy('sim')"><option value="public">تربية وتعليم</option><option value="azhar">أزهر</option></select> 
+                                    <select id="sim-stage" class="border-2 border-white p-4 rounded-xl font-bold bg-white text-sm outline-none shadow-sm" onchange="admin.updateHierarchy('sim')"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select> 
+                                    <select id="sim-grade" class="border-2 border-white p-4 rounded-xl font-bold bg-white text-sm outline-none shadow-sm"></select> 
+                                    <input id="sim-time" type="number" placeholder="الوقت (دقيقة)" class="border-2 border-white p-4 rounded-xl font-black bg-white text-center outline-none shadow-sm focus:border-yellow-400 text-yellow-900">
+                                </div>
+                            </div>
+                            
+                            <div class="bg-slate-900 p-8 rounded-3xl shadow-lg border border-slate-800 text-white relative overflow-hidden">
+                                <i class="fas fa-random absolute -left-4 -bottom-4 text-8xl text-white opacity-5"></i>
+                                <p class="font-black text-xl mb-3 flex items-center gap-3"><i class="fas fa-cogs text-yellow-400"></i> محرك السحب العشوائي</p>
+                                <p class="text-sm font-bold text-slate-400 mb-8">حدد عدد الأسئلة التي سيسحبها النظام عشوائياً من بنك كل مادة لتكوين الامتحان النهائي:</p>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-5 text-center font-bold">
+                                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700"><label class="text-emerald-400 block mb-3 text-sm">عربي</label><input type="number" id="sim-ar" value="5" class="w-full border-2 border-slate-600 rounded-xl bg-slate-900 text-white text-center font-black p-3 outline-none focus:border-emerald-400"></div>
+                                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700"><label class="text-blue-400 block mb-3 text-sm">رياضة/ماث</label><input type="number" id="sim-ma" value="5" class="w-full border-2 border-slate-600 rounded-xl bg-slate-900 text-white text-center font-black p-3 outline-none focus:border-blue-400"></div>
+                                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700"><label class="text-purple-400 block mb-3 text-sm">علوم/ساينس</label><input type="number" id="sim-sc" value="5" class="w-full border-2 border-slate-600 rounded-xl bg-slate-900 text-white text-center font-black p-3 outline-none focus:border-purple-400"></div>
+                                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700"><label class="text-rose-400 block mb-3 text-sm">إنجليزي</label><input type="number" id="sim-en" value="5" class="w-full border-2 border-slate-600 rounded-xl bg-slate-900 text-white text-center font-black p-3 outline-none focus:border-rose-400"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row gap-4 mb-8">
+                                <label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border border-yellow-200 hover:bg-yellow-100 transition-colors">
+                                    <input type="checkbox" id="sim-locked" class="w-6 h-6 accent-yellow-500"> 
+                                    <div><span class="font-black text-sm text-yellow-900 block"><i class="fas fa-crown"></i> محتوى VIP</span></div>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border border-red-200 hover:bg-red-100 transition-colors">
+                                    <input type="checkbox" id="sim-hidden" class="w-6 h-6 accent-red-500"> 
+                                    <div><span class="font-black text-sm text-red-900 block"><i class="fas fa-eye-slash"></i> إخفاء مؤقت</span></div>
+                                </label>
+                            </div>
+
+                            <button id="sim-save-btn" onclick="admin.saveSimulation()" class="w-full bg-yellow-400 text-yellow-900 py-5 rounded-2xl font-black text-2xl shadow-[0_10px_20px_rgba(250,204,21,0.3)] hover:bg-yellow-500 transition-transform hover:-translate-y-1"><i class="fas fa-rocket ml-2"></i> إطلاق المحاكي</button> 
+                        </div> 
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-2xl text-slate-800 mb-8 border-b pb-4 flex items-center gap-3"><i class="fas fa-archive text-yellow-500"></i> أرشيف المحاكيات</h4>
+                        <div id="simulations-list-display" class="grid grid-cols-1 lg:grid-cols-2 gap-5 max-h-[700px] overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB: LEADERBOARD MANAGEMENT ==================== -->
+                <div id="tab-leaderboard-mgmt" class="adm-tab space-y-8">
+                    <div class="bg-gradient-to-r from-amber-500 to-yellow-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6">
+                        <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-sm"><i class="fas fa-trophy text-4xl"></i></div>
+                        <div>
+                            <h3 class="text-3xl font-black mb-2">إدارة المتصدرين</h3>
+                            <p class="text-base font-bold opacity-90">تحكم في بيانات المتصدرين وإحصائيات الطلاب</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-xl mb-6 flex items-center gap-2 border-b pb-4"><i class="fas fa-medal text-amber-500"></i> إعادة تعيين التصنيفات</h4>
+                        <p class="text-sm font-bold text-slate-500 mb-6">يمكنك مسح بيانات المتصدرين لفترة زمنية محددة</p>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <button onclick="admin.resetLeaderboard('daily')" class="bg-red-50 text-red-600 p-4 rounded-xl font-black hover:bg-red-100 transition-colors border border-red-200">
+                                <i class="fas fa-trash ml-1"></i> مسح اليومي
+                            </button>
+                            <button onclick="admin.resetLeaderboard('weekly')" class="bg-orange-50 text-orange-600 p-4 rounded-xl font-black hover:bg-orange-100 transition-colors border border-orange-200">
+                                <i class="fas fa-trash ml-1"></i> مسح الأسبوعي
+                            </button>
+                            <button onclick="admin.resetLeaderboard('monthly')" class="bg-amber-50 text-amber-600 p-4 rounded-xl font-black hover:bg-amber-100 transition-colors border border-amber-200">
+                                <i class="fas fa-trash ml-1"></i> مسح الشهري
+                            </button>
+                            <button onclick="admin.resetLeaderboard('allTime')" class="bg-slate-50 text-slate-600 p-4 rounded-xl font-black hover:bg-slate-100 transition-colors border border-slate-200">
+                                <i class="fas fa-trash ml-1"></i> مسح الكل
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-xl mb-6 flex items-center gap-2 border-b pb-4"><i class="fas fa-users text-indigo-500"></i> إحصائيات الطلاب</h4>
+                        <div id="students-profiles-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 stagger-animation"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB: LIVE SESSIONS MANAGEMENT ==================== -->
+                <div id="tab-live-sessions-mgmt" class="adm-tab space-y-8">
+                    <div class="bg-gradient-to-r from-red-500 to-rose-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6">
+                        <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-sm"><i class="fas fa-broadcast-tower text-4xl"></i></div>
+                        <div>
+                            <h3 class="text-3xl font-black mb-2">إدارة البث المباشر</h3>
+                            <p class="text-base font-bold opacity-90">أنشئ وأدر جلسات البث المباشر للطلاب</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-red-500">
+                        <h4 class="font-black text-2xl mb-8 text-red-900" id="session-form-title">إضافة جلسة بث مباشر</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <input id="session-title" placeholder="عنوان الجلسة..." class="border-2 border-slate-200 p-4 rounded-xl font-black outline-none focus:border-red-400 bg-slate-50">
+                            <input id="session-teacher" placeholder="اسم المعلم..." class="border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-red-400 bg-slate-50">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-red-50 p-5 rounded-2xl border border-red-100">
+                            <select id="session-status" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none">
+                                <option value="upcoming">قادم</option><option value="live">مباشر الآن</option><option value="ended">منتهي</option>
+                            </select>
+                            <input id="session-time" type="datetime-local" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none">
+                            <input id="session-duration" type="number" placeholder="المدة (دقيقة)" value="60" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none text-center">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                            <input id="session-youtube" placeholder="رابط يوتيوب لايف (اختياري)" class="border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-red-400 bg-slate-50" dir="ltr">
+                            <input id="session-zoom" placeholder="رابط زوم (اختياري)" class="border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-red-400 bg-slate-50" dir="ltr">
+                        </div>
+                        
+                        <div class="flex gap-4 mb-8">
+                            <button id="session-save-btn" onclick="admin.saveLiveSession()" class="flex-1 bg-red-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-red-700 transition-all text-lg">
+                                <i class="fas fa-save ml-2"></i> حفظ الجلسة
+                            </button>
+                            <button onclick="admin.resetSessionForm()" class="bg-slate-100 text-slate-600 px-6 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-colors">
+                                <i class="fas fa-redo"></i> إفراغ
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-xl mb-6 text-slate-800 border-b pb-4"><i class="fas fa-list text-red-400"></i> الجلسات الحالية</h4>
+                        <div id="sessions-mgmt-list" class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2 stagger-animation"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB: COMMUNITY MANAGEMENT ==================== -->
+                <div id="tab-community-mgmt" class="adm-tab space-y-8">
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6">
+                        <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-sm"><i class="fas fa-users text-4xl"></i></div>
+                        <div>
+                            <h3 class="text-3xl font-black mb-2">إدارة المجتمع</h3>
+                            <p class="text-base font-bold opacity-90">أدر المنتديات والمجموعات الدراسية</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-xl mb-6 flex items-center gap-2 border-b pb-4"><i class="fas fa-comments text-purple-500"></i> منشورات المنتدى</h4>
+                        <div id="forums-mgmt-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 stagger-animation"></div>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-xl mb-6 flex items-center gap-2 border-b pb-4"><i class="fas fa-user-friends text-emerald-500"></i> مجموعات الدراسة</h4>
+                        <button onclick="admin.createStudyGroup()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-all text-lg mb-6">
+                            <i class="fas fa-plus ml-2"></i> إنشاء مجموعة جديدة
+                        </button>
+                        <div id="groups-mgmt-list" class="space-y-3 max-h-[400px] overflow-y-auto pr-2 stagger-animation"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB: USERS ==================== -->
+                <div id="tab-users" class="adm-tab space-y-8"> 
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-emerald-500"> 
+                        <h4 class="font-black text-2xl mb-8 text-emerald-900 flex items-center gap-3"><i class="fas fa-user-plus bg-emerald-100 p-3 rounded-xl"></i> إصدار حساب طالب جديد</h4> 
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8"> 
+                            <input id="new-user-name" placeholder="اسم المستخدم (للدخول)" class="border-2 border-slate-200 p-4 rounded-xl font-bold bg-slate-50 outline-none focus:border-emerald-500 transition-colors text-lg"> 
+                            <input id="new-user-pass" placeholder="الرقم السري" class="border-2 border-slate-200 p-4 rounded-xl font-bold bg-slate-50 outline-none focus:border-emerald-500 transition-colors text-lg"> 
+                            <div class="relative">
+                                <span class="absolute left-4 top-4 text-slate-400 font-bold text-sm">أيام</span>
+                                <input id="new-user-duration" type="number" placeholder="صلاحية الباقة" value="30" class="w-full border-2 border-slate-200 p-4 rounded-xl font-black bg-slate-50 text-center outline-none focus:border-emerald-500 transition-colors text-lg"> 
+                            </div>
+                        </div> 
+                        <button onclick="admin.addUser()" class="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-all text-xl"><i class="fas fa-id-card ml-2"></i> تفعيل الحساب</button> 
+                    </div> 
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm overflow-hidden border border-slate-200"> 
+                        <h4 class="font-black text-2xl mb-8 text-slate-800 border-b pb-4 flex items-center gap-3"><i class="fas fa-users text-slate-400"></i> قاعدة بيانات الطلاب</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right border-collapse whitespace-nowrap">
+                                <thead class="bg-slate-100 text-slate-600 text-sm"><tr><th class="p-4 rounded-tr-xl font-black">الحالة</th><th class="p-4 font-black">الاسم</th><th class="p-4 font-black">الرقم السري</th><th class="p-4 font-black">انتهاء الاشتراك</th><th class="p-4 rounded-tl-xl text-center font-black">إجراءات</th></tr></thead>
+                                <tbody id="users-list-body" class="text-sm font-bold text-slate-700"></tbody>
+                            </table> 
+                        </div>
+                    </div> 
+                </div>
+
+                <!-- ==================== TAB: POSTS ==================== -->
+                <div id="tab-posts" class="adm-tab space-y-8"> 
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-orange-500"> 
+                        <h3 class="font-black text-2xl mb-8 text-orange-800 flex items-center gap-3"><i class="fas fa-newspaper bg-orange-100 p-3 rounded-xl"></i> إضافة خبر / منشور للطالب</h3> 
+                        <div class="space-y-5"> 
+                            <input id="post-title" placeholder="عنوان الخبر الرئيسي..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-black text-xl outline-none focus:border-orange-500 bg-slate-50 transition-colors"> 
+                            <textarea id="post-content" placeholder="اكتب تفاصيل الخبر هنا للطلاب..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-40 outline-none focus:border-orange-500 bg-slate-50 transition-colors leading-loose"></textarea> 
+                            <input id="post-image" placeholder="رابط صورة غلاف الخبر (اختياري)" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-orange-500 bg-slate-50 transition-colors" dir="ltr"> 
+                            <button onclick="admin.addPost()" class="w-full bg-orange-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-orange-600 transition-all text-xl mt-4"><i class="fas fa-paper-plane ml-2"></i> نشر الخبر</button> 
+                        </div> 
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
+                        <h4 class="font-black text-xl mb-6 text-slate-800 border-b pb-4">إدارة الأخبار السابقة</h4>
+                        <div id="posts-list-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB: ANNOUNCEMENTS ==================== -->
+                <div id="tab-announcements" class="adm-tab space-y-8"> 
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-rose-500"> 
+                        <div class="bg-rose-50 p-5 rounded-2xl mb-8 border border-rose-100 flex items-start gap-4">
+                            <i class="fas fa-info-circle text-rose-500 text-3xl mt-1"></i>
+                            <div>
+                                <h3 class="font-black text-xl text-rose-800 mb-1">رسالة البوب أب (Pop-up)</h3>
+                                <p class="text-sm font-bold text-rose-600">هذه الرسالة ستظهر كإشعار بارز ومتحرك في أعلى شاشة الطالب فور دخوله للمنصة.</p>
+                            </div>
+                        </div>
+                        <div class="space-y-6"> 
+                            <textarea id="ann-text" rows="4" placeholder="اكتب نص الإعلان الهام هنا..." class="w-full border-2 border-slate-200 rounded-2xl p-5 font-black text-lg outline-none focus:border-rose-500 bg-slate-50 transition-colors leading-loose"></textarea> 
+                            <div class="flex flex-col md:flex-row items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                <div class="flex items-center gap-3 w-full md:w-auto flex-1 bg-white p-3 rounded-xl border">
+                                    <label class="font-bold text-sm text-slate-500">مدة استمرار العرض (أيام):</label> 
+                                    <input type="number" id="ann-expiry" value="3" class="border-2 border-slate-100 rounded-lg p-2 w-20 font-black text-center outline-none focus:border-rose-400 text-rose-600"> 
+                                </div>
+                                <label class="flex items-center justify-center gap-3 bg-white p-3 rounded-xl border cursor-pointer w-full md:w-auto flex-1 hover:border-rose-400 transition-colors">
+                                    <input type="checkbox" id="ann-active" class="w-6 h-6 accent-rose-500"> <span class="font-black text-rose-600">تفعيل ظهور الإعلان للطلاب</span>
+                                </label>
+                            </div>
+                            <button onclick="admin.saveAnnouncement()" class="w-full bg-rose-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-rose-700 transition-transform hover:-translate-y-1 mt-4"><i class="fas fa-broadcast-tower ml-2"></i> حفظ وتحديث الإعلان</button> 
+                        </div> 
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div> 
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyaSx72GXPLZqvfinZm6lpWvtLi3jvrR4",
+            authDomain: "talebyg-a2609.firebaseapp.com",
+            databaseURL: "https://talebyg-a2609-default-rtdb.firebaseio.com",
+            projectId: "talebyg-a2609",
+            storageBucket: "talebyg-a2609.firebasestorage.app"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const unitNames = ["", "الوحدة الأولى", "الوحدة الثانية", "الوحدة الثالثة", "الوحدة الرابعة", "الوحدة الخامسة", "الوحدة السادسة"];
+        const subjectMapping = {
+            primary: [ {id: 'arabic', name: 'لغة عربية'}, {id: 'math', name: 'رياضيات'}, {id: 'science', name: 'علوم'}, {id: 'english', name: 'إنجليزي'}, {id: 'social', name: 'دراسات'}, {id: 'religion', name: 'دين'} ],
+            prep: [ {id: 'arabic', name: 'لغة عربية'}, {id: 'math', name: 'رياضيات'}, {id: 'science', name: 'علوم'}, {id: 'english', name: 'إنجليزي'}, {id: 'social', name: 'دراسات'}, {id: 'computer', name: 'حاسب آلي'} ],
+            sec: [ {id: 'arabic', name: 'عربي'}, {id: 'english', name: 'إنجليزي'}, {id: 'french', name: 'فرنساوي'}, {id: 'physics', name: 'فيزياء'}, {id: 'chemistry', name: 'كيمياء'}, {id: 'biology', name: 'أحياء'}, {id: 'history', name: 'تاريخ'}, {id: 'geography', name: 'جغرافيا'}, {id: 'math', name: 'رياضيات'} ]
+        };
+
+        const app = {
+            login: (e) => {
+                e.preventDefault();
+                const em = document.getElementById('adm-email').value, p = document.getElementById('adm-pass').value;
+                if(!em || !p) return app.notify("أدخل البيانات", "error");
+                document.getElementById('login-btn').innerText = "جاري التحقق...";
+                firebase.auth().signInWithEmailAndPassword(em, p).then(() => app.notify("تم الدخول")).catch(e => {
+                    document.getElementById('login-btn').innerText = "تسجيل الدخول"; alert(e.message);
+                });
+            },
+            logout: () => firebase.auth().signOut().then(() => location.reload()),
+            notify: (msg, type = 'success') => {
+                const t = document.getElementById('toast-notification'), m = document.getElementById('toast-msg'), i = document.getElementById('toast-icon');
+                i.className = type === 'error' ? 'fas fa-exclamation-triangle text-2xl' : 'fas fa-check-circle text-2xl';
+                t.className = `fixed top-5 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl text-white font-bold min-w-[300px] justify-center transition-all duration-300 transform translate-y-0 ${type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`;
+                m.innerText = msg; setTimeout(() => t.classList.replace('translate-y-0', '-translate-y-32'), 3000);
+            }
+        };
+
+        const aiHelper = {
+            generate: async (promptText) => {
+                const apiKey = document.getElementById('set-api-key').value, model = document.getElementById('set-ai-model').value;
+                if (!apiKey || !model) throw new Error("أكمل إعدادات الذكاء الاصطناعي من الإعدادات");
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error?.message);
+                return data.candidates[0].content.parts[0].text;
+            }
+        };
+
+        const admin = {
+            tempVideos: [], tempLessonQuestions: [], tempQuizQuestions: [],
+            editLessonId: null, editQuizId: null, editSimId: null, editSessionId: null,
+            dbData: { users: {}, lessons: {}, quizzes: {}, posts: {}, settings: {}, announcements: {}, simulations: {}, leaderboard: {}, studentProfiles: {}, liveSessions: {}, community: {} },
+
+            init: () => {
+                firebase.auth().onAuthStateChanged(user => {
+                    if(user) {
+                        document.getElementById('login-view').classList.add('hidden'); document.getElementById('panel-view').classList.remove('hidden');
+                        admin.fetchData();
+                        setTimeout(() => { ['l', 'q', 'sim'].forEach(p => admin.updateHierarchy(p)); admin.updateVisHierarchy(); }, 500);
+                    }
+                });
+            },
+
+            toggleSidebar: () => { document.getElementById('sidebar').classList.toggle('open'); },
+
+            switchTab: (t) => {
+                document.querySelectorAll('.adm-tab').forEach(e => e.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active');
+                document.querySelectorAll('.side-btn').forEach(e => e.classList.remove('active')); event.currentTarget.classList.add('active');
+                document.getElementById('top-title').innerText = event.currentTarget.innerText.trim();
+                if(window.innerWidth < 768) admin.toggleSidebar(); 
+                window.scrollTo(0,0);
+                if(t === 'leaderboard-mgmt') admin.renderLeaderboardMgmt();
+                if(t === 'live-sessions-mgmt') admin.renderLiveSessionsMgmt();
+                if(t === 'community-mgmt') admin.renderCommunityMgmt();
+            },
+
+            fetchData: () => {
+                database.ref('/').on('value', (snapshot) => {
+                    admin.dbData = snapshot.val() || {};
+                    admin.renderUsers(); admin.renderLessons(); admin.renderQuizzes(); admin.renderSimulations(); admin.renderPosts();
+                    admin.renderHiddenList();
+                    if(admin.dbData.settings) {
+                        const set = admin.dbData.settings;
+                        document.getElementById('set-site-name').value = set.siteName || '';
+                        document.getElementById('set-whatsapp').value = set.whatsapp || '';
+                        document.getElementById('set-site-logo').value = set.siteLogo || '';
+                        document.getElementById('set-api-key').value = set.apiKey || '';
+                        if(set.aiModel) document.getElementById('set-ai-model').innerHTML = `<option value="${set.aiModel}">${set.aiModel}</option>`;
+                        document.getElementById('set-about').value = set.aboutText || '';
+                        document.getElementById('set-terms').value = set.termsText || '';
+                        document.getElementById('set-privacy').value = set.privacyText || '';
+                    }
+                    if(admin.dbData.announcements) {
+                        document.getElementById('ann-text').value = admin.dbData.announcements.text || '';
+                        document.getElementById('ann-active').checked = admin.dbData.announcements.isActive || false;
+                        if(admin.dbData.announcements.expiry) document.getElementById('ann-expiry').value = Math.ceil((admin.dbData.announcements.expiry - Date.now()) / 86400000);
+                    }
+                });
+            },
+
+            // ==================== إدارة الأسئلة المتقدمة ====================
+            toggleQuestionTypeFields: (prefix) => {
+                const type = document.getElementById(`${prefix}-q-type`).value;
+                document.getElementById(`${prefix}-mcq-fields`).classList.toggle('hidden', type !== 'mcq');
+                document.getElementById(`${prefix}-ordering-fields`).classList.toggle('hidden', type !== 'ordering');
+            },
+
+            updateHierarchy: (prefix) => {
+                const stage = document.getElementById(`${prefix}-stage`).value;
+                const gradeSelect = document.getElementById(`${prefix}-grade`);
+                const subjectSelect = document.getElementById(`${prefix}-subject`);
+                
+                let gradeHtml = stage === 'primary' ? '<option value="4">الصف الرابع</option><option value="5">الصف الخامس</option><option value="6">الصف السادس</option>' :
+                           stage === 'prep' ? '<option value="1">الأول الإعدادي</option><option value="2">الثاني الإعدادي</option><option value="3">الثالث الإعدادي</option>' :
+                           '<option value="1">الأول الثانوي</option><option value="2">الثاني الثانوي</option><option value="3">الثالث الثانوي</option>';
+                gradeSelect.innerHTML = gradeHtml;
+
+                if(subjectSelect) {
+                    const subs = subjectMapping[stage] || [];
+                    subjectSelect.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                }
+            },
+
+            fetchModels: async () => {
+                const key = document.getElementById('set-api-key').value; if(!key) return alert('ضع مفتاح API أولاً');
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error.message);
+                    const valid = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+                    document.getElementById('set-ai-model').innerHTML = valid.map(m => `<option value="${m.name.replace('models/', '')}">${m.name.replace('models/', '')}</option>`).join('');
+                    app.notify("تم جلب النماذج بنجاح");
+                } catch(e) { alert(e.message); }
+            },
+
+            saveSettings: () => { 
+                database.ref('settings').update({ 
+                    siteName: document.getElementById('set-site-name').value, 
+                    whatsapp: document.getElementById('set-whatsapp').value, 
+                    siteLogo: document.getElementById('set-site-logo').value,
+                    apiKey: document.getElementById('set-api-key').value, 
+                    aiModel: document.getElementById('set-ai-model').value,
+                    aboutText: document.getElementById('set-about').value,
+                    termsText: document.getElementById('set-terms').value,
+                    privacyText: document.getElementById('set-privacy').value
+                }).then(()=>app.notify("تم حفظ الإعدادات بنجاح")); 
+            },
+
+            // ==================== محرك الإخفاء ====================
+            updateVisHierarchy: () => {
+                const stage = document.getElementById('vis-stage').value;
+                const gradeSelect = document.getElementById('vis-grade');
+                const subjectSelect = document.getElementById('vis-subject');
+                
+                let gradeHtml = stage === 'primary' ? '<option value="4">الصف الرابع</option><option value="5">الصف الخامس</option><option value="6">الصف السادس</option>' :
+                           stage === 'prep' ? '<option value="1">الأول الإعدادي</option><option value="2">الثاني الإعدادي</option><option value="3">الثالث الإعدادي</option>' :
+                           '<option value="1">الأول الثانوي</option><option value="2">الثاني الثانوي</option><option value="3">الثالث الثانوي</option>';
+                gradeSelect.innerHTML = gradeHtml;
+                const subs = subjectMapping[stage] || [];
+                subjectSelect.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            },
+
+            toggleVisibility: (level) => {
+                const type = document.getElementById('vis-type').value;
+                const stage = document.getElementById('vis-stage').value;
+                const grade = document.getElementById('vis-grade').value;
+                const subject = document.getElementById('vis-subject').value;
+                
+                let key = "";
+                if(level === 'type') key = `type_${type}`;
+                else if(level === 'stage') key = `stage_${type}_${stage}`;
+                else if(level === 'grade') key = `grade_${type}_${stage}_${grade}`;
+                else if(level === 'subject') key = `subject_${type}_${stage}_${grade}_${subject}`;
+
+                const currentVis = (admin.dbData.settings && admin.dbData.settings.visibility && admin.dbData.settings.visibility[key] === false) ? false : true;
+                database.ref(`settings/visibility/${key}`).set(!currentVis).then(() => {
+                    app.notify(!currentVis ? "تم إظهار القسم للطلاب" : "تم إخفاء القسم بنجاح");
+                });
+            },
+
+            renderHiddenList: () => {
+                const list = document.getElementById('hidden-items-list');
+                const vis = (admin.dbData.settings && admin.dbData.settings.visibility) ? admin.dbData.settings.visibility : {};
+                const hiddenKeys = Object.keys(vis).filter(k => vis[k] === false);
+                
+                if(hiddenKeys.length === 0) {
+                    list.innerHTML = '<p class="text-slate-400 font-bold p-4 bg-slate-50 rounded-xl text-center border">المنصة مفتوحة بالكامل، لا يوجد عناصر مخفية حالياً.</p>';
+                    return;
+                }
+
+                const getFriendlyName = (k) => {
+                    let parts = k.split('_');
+                    let typeName = parts[1] === 'public' ? 'عام' : 'أزهر';
+                    if(parts[0] === 'type') return `مسار التعليم: ${typeName}`;
+                    let stageName = parts[2] === 'primary' ? 'ابتدائي' : parts[2] === 'prep' ? 'إعدادي' : 'ثانوي';
+                    if(parts[0] === 'stage') return `مرحلة: ${stageName} (${typeName})`;
+                    if(parts[0] === 'grade') return `صف: الصف ${parts[3]} - ${stageName} (${typeName})`;
+                    if(parts[0] === 'subject') {
+                        let subObj = subjectMapping[parts[2]].find(s => s.id === parts[4]);
+                        let subName = subObj ? subObj.name : parts[4];
+                        return `مادة: ${subName} - ${stageName} (${typeName})`;
+                    }
+                    return k;
+                };
+
+                list.innerHTML = hiddenKeys.map(k => `
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex justify-between items-center group">
+                        <span class="font-black text-red-900 text-sm"><i class="fas fa-ban text-red-400 mr-2"></i> ${getFriendlyName(k)}</span>
+                        <button onclick="database.ref('settings/visibility/${k}').set(true)" class="bg-white text-emerald-600 border border-emerald-200 px-4 py-2 rounded-lg font-bold text-xs hover:bg-emerald-50 transition-colors shadow-sm opacity-0 group-hover:opacity-100"><i class="fas fa-eye"></i> إظهار للطالب</button>
+                    </div>
+                `).join('');
+            },
+
+            // ==================== إدارة الدروس ====================
+            generateAILesson: async () => {
+                const topic = document.getElementById('l-title').value; if(!topic) return app.notify("اكتب العنوان أولاً", "error");
+                const btn = document.getElementById('btn-ai-lesson'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...'; btn.disabled = true;
+                try { document.getElementById('l-content').value = await aiHelper.generate(`اكتب شرحاً تعليمياً تفصيلياً لطلاب المدارس باللغة العربية حول موضوع: ${topic}.`); app.notify("تم التوليد"); } 
+                catch(e) { alert(e.message); }
+                btn.innerHTML = '<i class="fas fa-magic"></i> توليد AI'; btn.disabled = false;
+            },
+
+            generateAILessonQuestions: async () => {
+                const topic = document.getElementById('l-title').value, count = document.getElementById('l-ai-q-count').value || 5;
+                if(!topic) return app.notify("اكتب عنوان الدرس لتوليد أسئلته", "error");
+                const btn = document.getElementById('btn-ai-l-quiz'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+                try {
+                    const res = await aiHelper.generate(`قم بإنشاء ${count} أسئلة اختيار من متعدد حول: ${topic}. أعد الإجابة بصيغة JSON array فقط: [{"text": "السؤال", "opts": ["أ", "ب", "ج", "د"], "correctAnswer": 0, "type": "mcq"}]`);
+                    admin.tempLessonQuestions.push(...JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim())); admin.renderTempQuestions('l'); app.notify("تم التوليد");
+                } catch(e) { alert(e.message); }
+                btn.innerHTML = '<i class="fas fa-robot"></i> توليد ذكي'; btn.disabled = false;
+            },
+
+            addVideoToTemp: () => {
+                const name = document.getElementById('v-teacher').value.trim(), url = document.getElementById('v-url').value.trim();
+                if(name && url) { admin.tempVideos.push({ name, url }); admin.renderTempVideos(); document.getElementById('v-teacher').value = ''; document.getElementById('v-url').value = ''; }
+            },
+            renderTempVideos: () => { document.getElementById('temp-videos-list').innerHTML = admin.tempVideos.map((v, i) => `<div class="bg-white p-3 rounded-xl border border-slate-200 flex justify-between items-center text-sm font-bold shadow-sm"><span><i class="fas fa-video text-secondary ml-2"></i>${v.name}</span><button onclick="admin.tempVideos.splice(${i},1); admin.renderTempVideos()" class="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100"><i class="fas fa-trash"></i></button></div>`).join(''); },
+
+            saveLesson: () => {
+                const title = document.getElementById('l-title').value, content = document.getElementById('l-content').value;
+                if(!title) return app.notify("العنوان مطلوب", "error");
+                const payload = { title, content, type: document.getElementById('l-type').value, stage: document.getElementById('l-stage').value, grade: document.getElementById('l-grade').value, subject: document.getElementById('l-subject').value, unit: document.getElementById('l-unit').value, videos: admin.tempVideos, questions: admin.tempLessonQuestions, isLocked: document.getElementById('l-locked').checked, isHidden: document.getElementById('l-hidden').checked };
+                if(admin.editLessonId) { database.ref('lessons/' + admin.editLessonId).set(payload).then(() => { app.notify("تم التحديث بنجاح"); admin.resetLessonForm(); });
+                } else { database.ref('lessons').push(payload).then(() => { app.notify("تم حفظ ونشر الدرس"); admin.resetLessonForm(); }); }
+            },
+
+            editLesson: (id) => {
+                const l = admin.dbData.lessons[id]; if(!l) return;
+                admin.editLessonId = id; document.getElementById('l-type').value = l.type; document.getElementById('l-stage').value = l.stage; admin.updateHierarchy('l');
+                setTimeout(() => { document.getElementById('l-grade').value = l.grade; document.getElementById('l-subject').value = l.subject; }, 100);
+                document.getElementById('l-unit').value = l.unit || 1; document.getElementById('l-title').value = l.title; document.getElementById('l-content').value = l.content; 
+                document.getElementById('l-locked').checked = l.isLocked || false; document.getElementById('l-hidden').checked = l.isHidden || false;
+                admin.tempVideos = l.videos || []; admin.renderTempVideos(); admin.tempLessonQuestions = l.questions || []; admin.renderTempQuestions('l');
+                document.getElementById('l-form-title').innerText = "تعديل: " + l.title; 
+                const btn = document.getElementById('l-save-btn'); btn.innerHTML = "<i class='fas fa-save ml-2'></i> حفظ التحديثات"; btn.classList.replace('bg-indigo-600', 'bg-orange-500');
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            },
+
+            resetLessonForm: () => {
+                admin.editLessonId = null; document.getElementById('l-title').value = ''; document.getElementById('l-content').value = ''; document.getElementById('l-locked').checked = false; document.getElementById('l-hidden').checked = false;
+                admin.tempVideos = []; admin.tempLessonQuestions = []; admin.renderTempVideos(); admin.renderTempQuestions('l');
+                document.getElementById('l-form-title').innerText = "إضافة درس جديد"; 
+                const btn = document.getElementById('l-save-btn'); btn.innerHTML = "<i class='fas fa-paper-plane ml-2'></i> حفظ ونشر الدرس بالنظام"; btn.classList.replace('bg-orange-500', 'bg-indigo-600');
+            },
+
+            renderLessons: () => {
+                const l = Object.entries(admin.dbData.lessons || {}).reverse();
+                document.getElementById('lessons-list-display').innerHTML = l.map(([id, val]) => `
+                    <div class="bg-white p-5 rounded-2xl flex flex-col md:flex-row justify-between md:items-center gap-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+                        <div>
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md font-black border border-indigo-100">${val.type==='public'?'عام':'أزهر'} - صف ${val.grade} - ${val.subject}</span>
+                                ${val.isHidden ? '<span class="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded-md font-black border border-red-100"><i class="fas fa-eye-slash"></i> مخفي</span>' : ''}
+                                ${val.isLocked ? '<span class="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded-md font-black border border-yellow-100"><i class="fas fa-crown"></i> VIP</span>' : ''}
+                            </div>
+                            <h5 class="font-black text-slate-800 text-lg">${val.title}</h5>
+                        </div>
+                        <div class="flex gap-2 md:ml-auto opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="admin.editLesson('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold hover:bg-orange-500 hover:text-white text-sm transition-colors border border-orange-100"><i class="fas fa-pen"></i></button>
+                            <button onclick="if(confirm('متأكد من الحذف؟')) database.ref('lessons/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold hover:bg-red-500 hover:text-white text-sm transition-colors border border-red-100"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('');
+            },
+
+            // ==================== إدارة الاختبارات ====================
+            generateAIQuiz: async () => {
+                const topic = document.getElementById('q-title').value, count = document.getElementById('q-ai-q-count').value || 10;
+                if(!topic) return app.notify("اكتب اسم الاختبار", "error");
+                const btn = document.getElementById('btn-ai-quiz'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+                try {
+                    const res = await aiHelper.generate(`قم بإنشاء ${count} أسئلة اختيار من متعدد حول: ${topic}. أعد الإجابة بصيغة JSON array فقط: [{"text": "السؤال", "opts": ["أ", "ب", "ج", "د"], "correctAnswer": 0, "type": "mcq"}]`);
+                    admin.tempQuizQuestions.push(...JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim())); admin.renderTempQuestions('q'); app.notify("تم التوليد");
+                } catch(e) { alert(e.message); }
+                btn.innerHTML = '<i class="fas fa-robot"></i> ابدأ'; btn.disabled = false;
+            },
+
+            saveQuiz: () => {
+                const name = document.getElementById('q-title').value; if(!name || !admin.tempQuizQuestions.length) return app.notify("الاسم والأسئلة مطلوبان", "error");
+                const payload = { name, type: document.getElementById('q-type').value, stage: document.getElementById('q-stage').value, grade: document.getElementById('q-grade').value, subject: document.getElementById('q-subject').value, unit: document.getElementById('q-unit').value, questions: admin.tempQuizQuestions, isLocked: document.getElementById('q-locked').checked, isHidden: document.getElementById('q-hidden').checked };
+                if(admin.editQuizId) { database.ref('quizzes/' + admin.editQuizId).set(payload).then(() => { app.notify("تم التحديث"); admin.resetQuizForm(); });
+                } else { database.ref('quizzes').push(payload).then(() => { app.notify("تم الحفظ"); admin.resetQuizForm(); }); }
+            },
+
+            editQuiz: (id) => {
+                const q = admin.dbData.quizzes[id]; if(!q) return;
+                admin.editQuizId = id; document.getElementById('q-type').value = q.type; document.getElementById('q-stage').value = q.stage; admin.updateHierarchy('q');
+                setTimeout(() => { document.getElementById('q-grade').value = q.grade; document.getElementById('q-subject').value = q.subject; }, 100);
+                document.getElementById('q-unit').value = q.unit || 0; document.getElementById('q-title').value = q.name; 
+                document.getElementById('q-locked').checked = q.isLocked || false; document.getElementById('q-hidden').checked = q.isHidden || false;
+                admin.tempQuizQuestions = q.questions || []; admin.renderTempQuestions('q');
+                document.getElementById('q-form-title').innerText = "تعديل: " + q.name; 
+                const btn = document.getElementById('q-save-btn'); btn.innerHTML = "<i class='fas fa-save ml-2'></i> تحديث الاختبار"; btn.classList.replace('bg-blue-600', 'bg-orange-500');
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            },
+
+            resetQuizForm: () => {
+                admin.editQuizId = null; document.getElementById('q-title').value = ''; document.getElementById('q-locked').checked = false; document.getElementById('q-hidden').checked = false;
+                admin.tempQuizQuestions = []; admin.renderTempQuestions('q');
+                document.getElementById('q-form-title').innerText = "إنشاء اختبار مستقل"; 
+                const btn = document.getElementById('q-save-btn'); btn.innerHTML = "<i class='fas fa-paper-plane ml-2'></i> حفظ ونشر الاختبار"; btn.classList.replace('bg-orange-500', 'bg-blue-600');
+            },
+
+            renderQuizzes: () => {
+                const q = Object.entries(admin.dbData.quizzes || {}).reverse();
+                document.getElementById('quizzes-list-display').innerHTML = q.map(([id, val]) => `
+                    <div class="bg-white p-5 rounded-2xl flex flex-col md:flex-row justify-between md:items-center gap-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+                        <div>
+                            <div class="flex gap-2 mb-3">
+                                <span class="text-[10px] bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-black border border-blue-100">${val.unit==0?'شامل':'الوحدة '+val.unit} | صف ${val.grade} | ${val.subject}</span>
+                                ${val.isHidden ? '<span class="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded-md font-black border border-red-100"><i class="fas fa-eye-slash"></i> مخفي</span>' : ''}
+                                ${val.isLocked ? '<span class="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded-md font-black border border-yellow-100"><i class="fas fa-crown"></i> VIP</span>' : ''}
+                            </div>
+                            <h5 class="font-black text-slate-800 text-lg">${val.name} <span class="text-sm text-slate-400 font-bold ml-2">(${val.questions?.length} س)</span></h5>
+                        </div>
+                        <div class="flex gap-2 md:ml-auto opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="admin.editQuiz('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold hover:bg-orange-500 hover:text-white text-sm transition-colors border border-orange-100"><i class="fas fa-pen"></i></button>
+                            <button onclick="if(confirm('حذف الاختبار؟')) database.ref('quizzes/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold hover:bg-red-500 hover:text-white text-sm transition-colors border border-red-100"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('');
+            },
+
+            // ==================== إضافة الأسئلة ====================
+            addQuestionToTemp: (prefix) => {
+                const type = document.getElementById(`${prefix}-q-type`).value;
+                const text = document.getElementById(`${prefix}-q-text`).value;
+                if(!text) return app.notify("اكتب نص السؤال", "error");
+                
+                let questionObj = { text, type };
+                
+                if(type === 'mcq') {
+                    const opts = [document.getElementById(`${prefix}-q-opt0`).value, document.getElementById(`${prefix}-q-opt1`).value, document.getElementById(`${prefix}-q-opt2`).value, document.getElementById(`${prefix}-q-opt3`).value];
+                    const ansText = document.getElementById(`${prefix}-q-ans`).value;
+                    if(opts.includes("") || !ansText) return app.notify("اكمل البيانات", "error");
+                    const correctIdx = opts.indexOf(ansText);
+                    if(correctIdx === -1) return app.notify("الإجابة يجب أن تطابق أحد الخيارات حرفياً", "error");
+                    questionObj.opts = opts;
+                    questionObj.correctAnswer = correctIdx;
+                } else if(type === 'ordering') {
+                    const itemsText = document.getElementById(`${prefix}-q-order-items`).value;
+                    const items = itemsText.split('\n').filter(i => i.trim());
+                    if(items.length < 2) return app.notify("أدخل عنصرين على الأقل", "error");
+                    questionObj.opts = items;
+                    questionObj.orderItems = items;
+                    questionObj.correctOrder = [...Array(items.length).keys()];
+                }
+                
+                if(prefix==='l') admin.tempLessonQuestions.push(questionObj);
+                else admin.tempQuizQuestions.push(questionObj);
+                
+                admin.renderTempQuestions(prefix);
+                document.getElementById(`${prefix}-q-text`).value = '';
+                if(type === 'mcq') {
+                    [0,1,2,3].forEach(i => document.getElementById(`${prefix}-q-opt${i}`).value = '');
+                    document.getElementById(`${prefix}-q-ans`).value = '';
+                }
+            },
+
+            addBulkQuestions: (prefix) => {
+                try { 
+                    const val = document.getElementById(`${prefix}-bulk-json`).value; 
+                    const parsed = JSON.parse(val); 
+                    const arr = Array.isArray(parsed) ? parsed : [parsed];
+                    arr.forEach(q => { if(!q.type) q.type = 'mcq'; });
+                    if(prefix==='l') admin.tempLessonQuestions.push(...arr); 
+                    else admin.tempQuizQuestions.push(...arr);
+                    admin.renderTempQuestions(prefix); 
+                    document.getElementById(`${prefix}-bulk-json`).value = ''; 
+                    app.notify("تم استيراد الأسئلة بنجاح");
+                } catch(e) { app.notify("صيغة JSON غير صحيحة", "error"); }
+            },
+
+            renderTempQuestions: (prefix) => {
+                const arr = prefix==='l' ? admin.tempLessonQuestions : admin.tempQuizQuestions;
+                document.getElementById(`temp-${prefix}-questions-list`).innerHTML = arr.map((q, i) => {
+                    const typeLabel = q.type === 'essay' ? '📝 مقالي' : q.type === 'ordering' ? '🔢 ترتيب' : '✅ MCQ';
+                    return `
+                    <div class="bg-white p-4 border border-slate-200 flex justify-between items-start rounded-2xl text-sm font-bold shadow-sm mb-3 group">
+                        <div class="w-5/6">
+                            <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full font-black ml-2">${typeLabel}</span>
+                            <span class="${prefix==='l'?'text-emerald-500':'text-blue-500'} font-black text-lg inline-block">${i+1}.</span> 
+                            <span class="text-slate-700 leading-relaxed">${q.text}</span>
+                        </div> 
+                        <button onclick="admin.${prefix==='l'?'tempLessonQuestions':'tempQuizQuestions'}.splice(${i},1); admin.renderTempQuestions('${prefix}')" class="text-red-400 hover:text-red-600 bg-slate-50 p-2.5 rounded-xl hover:bg-red-50 transition-colors"><i class="fas fa-trash"></i></button>
+                    </div>`;
+                }).join('');
+            },
+
+            // ==================== المحاكيات ====================
+            saveSimulation: () => {
+                const name = document.getElementById('sim-name').value; if(!name) return app.notify("مطلوب اسم المحاكي", "error");
+                const payload = { name, type: document.getElementById('sim-type').value, stage: document.getElementById('sim-stage').value, grade: document.getElementById('sim-grade').value, time: document.getElementById('sim-time').value, counts: { ar: document.getElementById('sim-ar').value, ma: document.getElementById('sim-ma').value, sc: document.getElementById('sim-sc').value, en: document.getElementById('sim-en').value }, isLocked: document.getElementById('sim-locked').checked, isHidden: document.getElementById('sim-hidden').checked };
+                if(admin.editSimId) { database.ref('simulations/' + admin.editSimId).set(payload).then(() => { app.notify("تم التحديث"); admin.resetSimForm(); });
+                } else { database.ref('simulations').push(payload).then(() => { app.notify("تم الحفظ"); admin.resetSimForm(); }); }
+            },
+            
+            editSimulation: (id) => {
+                const s = admin.dbData.simulations[id]; if(!s) return;
+                admin.editSimId = id; document.getElementById('sim-name').value = s.name; document.getElementById('sim-type').value = s.type; document.getElementById('sim-stage').value = s.stage; admin.updateHierarchy('sim');
+                setTimeout(() => { document.getElementById('sim-grade').value = s.grade; }, 100);
+                document.getElementById('sim-time').value = s.time; document.getElementById('sim-ar').value = s.counts.ar; document.getElementById('sim-ma').value = s.counts.ma; document.getElementById('sim-sc').value = s.counts.sc; document.getElementById('sim-en').value = s.counts.en;
+                document.getElementById('sim-locked').checked = s.isLocked || false; document.getElementById('sim-hidden').checked = s.isHidden || false;
+                document.getElementById('sim-form-title').innerText = "تعديل: " + s.name; 
+                const btn = document.getElementById('sim-save-btn'); btn.innerHTML = "<i class='fas fa-save ml-2'></i> تحديث المحاكي"; btn.classList.replace('bg-yellow-400', 'bg-orange-400'); btn.classList.replace('text-yellow-900', 'text-white');
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            },
+
+            resetSimForm: () => {
+                admin.editSimId = null; document.getElementById('sim-name').value = ''; document.getElementById('sim-time').value = ''; document.getElementById('sim-locked').checked = false; document.getElementById('sim-hidden').checked = false;
+                document.getElementById('sim-form-title').innerText = "إنشاء محاكي امتحانات"; 
+                const btn = document.getElementById('sim-save-btn'); btn.innerHTML = "<i class='fas fa-rocket ml-2'></i> إطلاق المحاكي"; btn.classList.replace('bg-orange-400', 'bg-yellow-400'); btn.classList.replace('text-white', 'text-yellow-900');
+            },
+
+            renderSimulations: () => {
+                const s = Object.entries(admin.dbData.simulations || {}).reverse();
+                document.getElementById('simulations-list-display').innerHTML = s.map(([id, val]) => `
+                    <div class="bg-white p-5 rounded-2xl flex flex-col md:flex-row justify-between md:items-center gap-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+                        <div>
+                            <div class="flex gap-2 mb-3">
+                                ${val.isHidden ? '<span class="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded-md font-black border border-red-100"><i class="fas fa-eye-slash"></i> مخفي</span>' : ''}
+                                ${val.isLocked ? '<span class="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded-md font-black border border-yellow-100"><i class="fas fa-crown"></i> VIP</span>' : ''}
+                            </div>
+                            <h5 class="font-black text-slate-800 text-lg">${val.name}</h5> 
+                            <span class="text-sm text-yellow-600 font-bold block mt-1"><i class="fas fa-stopwatch"></i> ${val.time} دقيقة</span>
+                        </div>
+                        <div class="flex gap-2 md:ml-auto opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="admin.editSimulation('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold hover:bg-orange-500 hover:text-white text-sm transition-colors border border-orange-100"><i class="fas fa-pen"></i></button>
+                            <button onclick="if(confirm('حذف المحاكي؟')) database.ref('simulations/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold hover:bg-red-500 hover:text-white text-sm transition-colors border border-red-100"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('');
+            },
+
+            // ==================== إدارة المتصدرين 🏆 ====================
+            resetLeaderboard: (period) => {
+                if(!confirm(`متأكد من مسح بيانات المتصدرين لفترة: ${period}؟`)) return;
+                database.ref(`leaderboard/${period}`).set({}).then(() => app.notify("تم مسح التصنيف بنجاح"));
+            },
+
+            renderLeaderboardMgmt: () => {
+                const profiles = Object.entries(admin.dbData.studentProfiles || {})
+                    .sort((a, b) => (b[1].totalXP || 0) - (a[1].totalXP || 0));
+                
+                document.getElementById('students-profiles-list').innerHTML = profiles.length > 0 ? profiles.map(([name, data], index) => `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-4">
+                            <span class="text-2xl font-black w-10 text-center">${index < 3 ? ['🥇','🥈','🥉'][index] : index+1}</span>
+                            <div>
+                                <h5 class="font-black text-slate-800">${name}</h5>
+                                <p class="text-xs font-bold text-slate-400">المستوى ${data.level || 1} | ${data.totalXP || 0} XP</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="text-xs bg-slate-100 px-3 py-1 rounded-full font-bold">${data.badges ? data.badges.length : 0} شارات</span>
+                            <button onclick="if(confirm('حذف بيانات هذا الطالب؟')) database.ref('studentProfiles/${name}').remove()" class="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('') : '<p class="text-slate-400 font-bold text-center py-8">لا توجد بيانات طلاب بعد</p>';
+            },
+
+            // ==================== إدارة البث المباشر 🎥 ====================
+            saveLiveSession: () => {
+                const title = document.getElementById('session-title').value;
+                if(!title) return app.notify("العنوان مطلوب", "error");
+                
+                const payload = {
+                    title,
+                    teacher: document.getElementById('session-teacher').value || 'غير محدد',
+                    status: document.getElementById('session-status').value,
+                    scheduledTime: document.getElementById('session-time').value ? new Date(document.getElementById('session-time').value).getTime() : Date.now(),
+                    duration: parseInt(document.getElementById('session-duration').value) || 60,
+                    youtubeLiveUrl: document.getElementById('session-youtube').value,
+                    zoomLink: document.getElementById('session-zoom').value
+                };
+                
+                if(admin.editSessionId) {
+                    database.ref('liveSessions/' + admin.editSessionId).set(payload).then(() => { app.notify("تم تحديث الجلسة"); admin.resetSessionForm(); });
+                } else {
+                    database.ref('liveSessions').push(payload).then(() => { app.notify("تم إنشاء الجلسة"); admin.resetSessionForm(); });
+                }
+            },
+
+            editLiveSession: (id) => {
+                const s = admin.dbData.liveSessions[id];
+                if(!s) return;
+                admin.editSessionId = id;
+                document.getElementById('session-title').value = s.title || '';
+                document.getElementById('session-teacher').value = s.teacher || '';
+                document.getElementById('session-status').value = s.status || 'upcoming';
+                document.getElementById('session-duration').value = s.duration || 60;
+                document.getElementById('session-youtube').value = s.youtubeLiveUrl || '';
+                document.getElementById('session-zoom').value = s.zoomLink || '';
+                if(s.scheduledTime) {
+                    document.getElementById('session-time').value = new Date(s.scheduledTime).toISOString().slice(0, 16);
+                }
+                document.getElementById('session-form-title').innerText = "تعديل جلسة: " + s.title;
+                document.getElementById('session-save-btn').innerText = "تحديث الجلسة";
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            },
+
+            resetSessionForm: () => {
+                admin.editSessionId = null;
+                document.getElementById('session-title').value = '';
+                document.getElementById('session-teacher').value = '';
+                document.getElementById('session-status').value = 'upcoming';
+                document.getElementById('session-time').value = '';
+                document.getElementById('session-duration').value = '60';
+                document.getElementById('session-youtube').value = '';
+                document.getElementById('session-zoom').value = '';
+                document.getElementById('session-form-title').innerText = "إضافة جلسة بث مباشر";
+                document.getElementById('session-save-btn').innerText = "حفظ الجلسة";
+            },
+
+            renderLiveSessionsMgmt: () => {
+                const sessions = Object.entries(admin.dbData.liveSessions || {}).reverse();
+                document.getElementById('sessions-mgmt-list').innerHTML = sessions.length > 0 ? sessions.map(([id, s], index) => `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm" style="animation: fadeIn 0.3s ${index * 0.1}s both;">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h5 class="font-black text-slate-800">${s.title}</h5>
+                                <p class="text-xs font-bold text-slate-400">${s.teacher} | ${s.duration} دقيقة</p>
+                            </div>
+                            <span class="text-[10px] font-black px-3 py-1 rounded-full ${s.status === 'live' ? 'bg-red-100 text-red-600' : s.status === 'upcoming' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}">${s.status === 'live' ? '🔴 مباشر' : s.status === 'upcoming' ? '📅 قادم' : '✅ منتهي'}</span>
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="admin.editLiveSession('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs hover:bg-orange-500 hover:text-white transition-colors"><i class="fas fa-pen"></i> تعديل</button>
+                            <button onclick="if(confirm('حذف الجلسة؟')) database.ref('liveSessions/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs hover:bg-red-500 hover:text-white transition-colors"><i class="fas fa-trash"></i> حذف</button>
+                        </div>
+                    </div>
+                `).join('') : '<p class="text-slate-400 font-bold text-center py-8 col-span-2">لا توجد جلسات بعد</p>';
+            },
+
+            // ==================== إدارة المجتمع 👥 ====================
+            renderCommunityMgmt: () => {
+                const forums = Object.entries(admin.dbData.community?.forums || {}).reverse();
+                document.getElementById('forums-mgmt-list').innerHTML = forums.length > 0 ? forums.map(([id, post], index) => `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm" style="animation: fadeIn 0.3s ${index * 0.1}s both;">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h5 class="font-black text-slate-800">${post.title}</h5>
+                                <p class="text-xs font-bold text-slate-400">${post.author} | ${post.likes || 0} ❤️ | ${post.comments ? Object.keys(post.comments).length : 0} 💬</p>
+                            </div>
+                            <button onclick="if(confirm('حذف المنشور؟')) database.ref('community/forums/${id}').remove()" class="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('') : '<p class="text-slate-400 font-bold text-center py-8">لا توجد منشورات بعد</p>';
+
+                const groups = Object.entries(admin.dbData.community?.studyGroups || {});
+                document.getElementById('groups-mgmt-list').innerHTML = groups.length > 0 ? groups.map(([id, g], index) => `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm" style="animation: fadeIn 0.3s ${index * 0.1}s both;">
+                        <div>
+                            <h5 class="font-black text-slate-800">${g.name}</h5>
+                            <p class="text-xs font-bold text-slate-400">${g.members ? g.members.length : 0} أعضاء</p>
+                        </div>
+                        <button onclick="if(confirm('حذف المجموعة؟')) database.ref('community/studyGroups/${id}').remove()" class="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"><i class="fas fa-trash"></i></button>
+                    </div>
+                `).join('') : '<p class="text-slate-400 font-bold text-center py-8">لا توجد مجموعات بعد</p>';
+            },
+
+            createStudyGroup: () => {
+                const name = prompt("أدخل اسم المجموعة الدراسية الجديدة:");
+                if(!name) return;
+                database.ref('community/studyGroups').push({
+                    name,
+                    members: [],
+                    createdBy: 'admin',
+                    createdAt: Date.now()
+                }).then(() => app.notify("تم إنشاء المجموعة بنجاح"));
+            },
+
+            // ==================== الطلاب والمنشورات ====================
+            addUser: () => { 
+                const u = document.getElementById('new-user-name').value, p = document.getElementById('new-user-pass').value, d = document.getElementById('new-user-duration').value; 
+                if(!u || !p) return app.notify("أكمل البيانات", "error"); 
+                database.ref('users').orderByChild('username').equalTo(u).once('value', snapshot => {
+                    if(snapshot.exists()) return app.notify("اسم المستخدم موجود مسبقاً", "error");
+                    database.ref('users').push({ username: u, pass: p, expiry: Date.now() + (d * 86400000), isActive: true }).then(() => { 
+                        app.notify("تم إضافة الطالب بنجاح"); document.getElementById('new-user-name').value=''; document.getElementById('new-user-pass').value=''; 
+                    });
+                });
+            },
+            
+            renderUsers: () => { 
+                const u = Object.entries(admin.dbData.users || {}).reverse(); 
+                document.getElementById('users-list-body').innerHTML = u.map(([id, val]) => {
+                    const daysLeft = Math.ceil((val.expiry - Date.now()) / 86400000);
+                    const isExp = daysLeft <= 0;
+                    return `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td class="p-4"><span class="${val.isActive ? (isExp ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600') : 'bg-red-100 text-red-600'} px-3 py-1.5 rounded-lg text-xs font-black shadow-sm">${!val.isActive ? 'موقوف' : isExp ? 'منتهي' : 'نشط'}</span></td>
+                        <td class="p-4 font-black text-slate-800 text-base">${val.username}</td>
+                        <td class="p-4"><span class="font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">${val.pass}</span></td>
+                        <td class="p-4 font-bold ${isExp ? 'text-red-500' : 'text-slate-600'}">${isExp ? 'انتهى' : 'باقي ' + daysLeft + ' يوم'}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="database.ref('users/${id}/isActive').set(${!val.isActive})" class="${val.isActive?'text-amber-600 bg-amber-50 hover:bg-amber-500 hover:text-white':'text-emerald-600 bg-emerald-50 hover:bg-emerald-500 hover:text-white'} p-2.5 rounded-xl mx-1 transition-colors shadow-sm"><i class="fas ${val.isActive?'fa-pause':'fa-play'}"></i></button>
+                            <button onclick="if(confirm('حذف الطالب؟')) database.ref('users/${id}').remove()" class="text-red-600 bg-red-50 hover:bg-red-500 hover:text-white p-2.5 rounded-xl transition-colors shadow-sm"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                }).join(''); 
+            },
+            
+            addPost: () => { 
+                const title = document.getElementById('post-title').value, content = document.getElementById('post-content').value; 
+                if(title) database.ref('posts').push({ title, content, image: document.getElementById('post-image').value, date: Date.now() }).then(() => { 
+                    app.notify("تم نشر الخبر بنجاح"); 
+                    document.getElementById('post-title').value=''; document.getElementById('post-content').value=''; document.getElementById('post-image').value=''; 
+                }); 
+            },
+            
+            renderPosts: () => { 
+                const p = Object.entries(admin.dbData.posts || {}).reverse(); 
+                document.getElementById('posts-list-display').innerHTML = p.map(([id, val]) => `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow group">
+                        <div class="flex-1 pr-4 border-r-4 border-orange-400">
+                            <b class="truncate block text-slate-800 text-lg mb-1">${val.title}</b>
+                            <span class="text-xs text-slate-400 font-bold"><i class="fas fa-clock"></i> ${new Date(val.date).toLocaleDateString('ar-EG')}</span>
+                        </div>
+                        <button onclick="if(confirm('حذف الخبر؟')) database.ref('posts/${id}').remove()" class="text-red-500 bg-red-50 hover:bg-red-500 hover:text-white p-3 rounded-xl ml-2 transition-colors opacity-100 md:opacity-0 group-hover:opacity-100"><i class="fas fa-trash"></i></button>
+                    </div>`).join(''); 
+            },
+            
+            saveAnnouncement: () => { 
+                database.ref('announcements').set({ 
+                    text: document.getElementById('ann-text').value, 
+                    isActive: document.getElementById('ann-active').checked, 
+                    expiry: Date.now() + (document.getElementById('ann-expiry').value * 86400000) 
+                }).then(()=>app.notify("تم حفظ وتحديث الإعلان بنجاح")); 
+            }
+        };
+
+        admin.init();
+    </script> 
+</body>
+</html>
