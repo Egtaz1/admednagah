@@ -17,14 +17,13 @@
         .adm-tab { display: none; animation: fadeIn 0.4s ease-in-out; }
         .adm-tab.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        
         .sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; }
         @media (max-width: 768px) { .sidebar { transform: translateX(100%); } .sidebar.open { transform: translateX(0); } .main-content { margin-right: 0 !important; } }
-        
         .side-btn { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-radius: 1rem; color: #94a3b8; font-weight: 700; transition: all 0.2s; margin-bottom: 0.5rem; border: 1px solid transparent; }
         .side-btn:hover { background-color: #1e293b; color: #f8fafc; border-color: #334155; }
         .side-btn.active { background-color: #2563eb; color: #ffffff; box-shadow: 0 10px 25px -5px rgba(37,99,235,0.4); border-color: #3b82f6; }
         .badge-new { background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 900; }
+        .content-block { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 0.5rem; border: 1px solid #e2e8f0; }
     </style> 
 </head> 
 <body class="text-slate-800 flex h-screen overflow-hidden"> 
@@ -48,38 +47,31 @@
     </div> 
 
     <div id="panel-view" class="hidden w-full h-full flex bg-slate-100">
-        
         <aside id="sidebar" class="sidebar fixed right-0 top-0 h-full w-72 bg-admin text-white shadow-[0_0_40px_rgba(0,0,0,0.1)] flex flex-col overflow-y-auto no-scrollbar">
             <div class="p-8 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-admin/95 backdrop-blur z-10">
                 <h2 class="text-3xl font-black flex items-center gap-3"><i class="fas fa-crown text-yellow-400"></i> لوحة الإدارة</h2>
                 <button onclick="admin.toggleSidebar()" class="md:hidden w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-300 hover:text-white"><i class="fas fa-times"></i></button>
             </div>
-            
             <nav class="flex-1 p-5 overflow-y-auto no-scrollbar">
-                <p class="text-xs font-black text-slate-500 mb-4 px-4 tracking-wider">الإعدادات والتحكم</p>
+                <p class="text-xs font-black text-slate-500 mb-4 px-4">الإعدادات والتحكم</p>
                 <button onclick="admin.switchTab('settings')" class="side-btn active w-full text-right"><i class="fas fa-cogs w-6 text-center"></i> إعدادات المنصة</button>
-                <button onclick="admin.switchTab('visibility')" class="side-btn w-full text-right relative"><i class="fas fa-eye w-6 text-center text-emerald-400"></i> شجرة الإخفاء</button>
-                
-                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4 tracking-wider">المحتوى التعليمي</p>
+                <button onclick="admin.switchTab('visibility')" class="side-btn w-full text-right"><i class="fas fa-eye w-6 text-center text-emerald-400"></i> شجرة الإخفاء</button>
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">المحتوى التعليمي</p>
                 <button onclick="admin.switchTab('lessons')" class="side-btn w-full text-right"><i class="fas fa-video w-6 text-center text-indigo-400"></i> الدروس والمناهج</button>
                 <button onclick="admin.switchTab('quizzes')" class="side-btn w-full text-right"><i class="fas fa-file-signature w-6 text-center text-blue-400"></i> الاختبارات</button>
                 <button onclick="admin.switchTab('simulations')" class="side-btn w-full text-right"><i class="fas fa-stopwatch w-6 text-center text-yellow-400"></i> المحاكيات</button>
-                
-                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4 tracking-wider">مكتبة المحتوى</p>
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">مكتبة المحتوى</p>
                 <button onclick="admin.switchTab('files-mgmt')" class="side-btn w-full text-right"><i class="fas fa-book w-6 text-center text-cyan-400"></i> الكتب والملفات</button>
                 <button onclick="admin.switchTab('subjects-mgmt')" class="side-btn w-full text-right"><i class="fas fa-th-large w-6 text-center text-fuchsia-400"></i> المواد المخصصة</button>
-                
-                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4 tracking-wider">الميزات المتقدمة</p>
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">الميزات المتقدمة</p>
                 <button onclick="admin.switchTab('leaderboard-mgmt')" class="side-btn w-full text-right"><i class="fas fa-trophy w-6 text-center text-amber-400"></i> المتصدرين</button>
                 <button onclick="admin.switchTab('live-sessions-mgmt')" class="side-btn w-full text-right"><i class="fas fa-broadcast-tower w-6 text-center text-red-400"></i> البث المباشر</button>
                 <button onclick="admin.switchTab('community-mgmt')" class="side-btn w-full text-right"><i class="fas fa-users w-6 text-center text-purple-400"></i> المجتمع</button>
-                
-                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4 tracking-wider">الطلاب والتواصل</p>
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">الطلاب والتواصل</p>
                 <button onclick="admin.switchTab('users')" class="side-btn w-full text-right"><i class="fas fa-users-cog w-6 text-center text-teal-400"></i> الطلاب</button>
                 <button onclick="admin.switchTab('posts')" class="side-btn w-full text-right"><i class="fas fa-newspaper w-6 text-center text-orange-400"></i> الأخبار</button>
                 <button onclick="admin.switchTab('announcements')" class="side-btn w-full text-right"><i class="fas fa-bullhorn w-6 text-center text-rose-400"></i> الإعلانات</button>
             </nav>
-
             <div class="p-6 border-t border-slate-800 bg-slate-900/50">
                 <button onclick="app.logout()" class="w-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3">
                     <i class="fas fa-power-off text-lg"></i> تسجيل الخروج
@@ -88,7 +80,6 @@
         </aside>
 
         <main class="main-content flex-1 h-full overflow-y-auto mr-0 md:mr-72 transition-all duration-300 relative">
-            
             <header class="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200 sticky top-0 z-40 p-4 md:px-8 flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <button onclick="admin.toggleSidebar()" class="md:hidden w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600"><i class="fas fa-bars text-xl"></i></button>
@@ -101,51 +92,45 @@
             </header>
 
             <div class="p-4 md:p-8 max-w-7xl mx-auto pb-24">
-                
-                <!-- ==================== TAB: SETTINGS ==================== -->
-                <div id="tab-settings" class="adm-tab active space-y-8"> 
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
-                        <h3 class="font-black text-2xl mb-6 text-slate-800 flex items-center gap-3 border-b pb-4"><i class="fas fa-paint-brush text-primary bg-blue-50 p-3 rounded-xl"></i> الهوية والتواصل</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> 
+                <!-- SETTINGS TAB -->
+                <div id="tab-settings" class="adm-tab active space-y-8">
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
+                        <h3 class="font-black text-2xl mb-6 border-b pb-4"><i class="fas fa-paint-brush text-primary bg-blue-50 p-3 rounded-xl"></i> الهوية والتواصل</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">اسم المنصة</label><input id="set-site-name" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-primary bg-slate-50"></div>
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">واتساب (للتواصل)</label><input id="set-whatsapp" placeholder="201xxxxxxxxx" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-primary bg-slate-50" dir="ltr"></div>
                             <div class="md:col-span-2"><label class="font-bold text-sm text-slate-500 mb-2 block">رابط اللوجو</label><input id="set-site-logo" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-primary bg-slate-50" dir="ltr"></div>
                         </div>
-                        <h4 class="font-black text-lg mt-8 mb-4 text-slate-700">روابط التواصل الاجتماعي</h4>
+                        <h4 class="font-black text-lg mt-8 mb-4">روابط التواصل الاجتماعي</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">فيسبوك</label><input id="set-fb" placeholder="https://facebook.com/..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-blue-500 bg-slate-50" dir="ltr"></div>
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">يوتيوب</label><input id="set-yt" placeholder="https://youtube.com/..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-red-500 bg-slate-50" dir="ltr"></div>
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">واتساب (للأزرار)</label><input id="set-wa" placeholder="201xxxxxxxxx" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-emerald-500 bg-slate-50" dir="ltr"></div>
                         </div>
                     </div>
-
                     <div class="bg-indigo-50 p-8 rounded-[2rem] border border-indigo-100 shadow-sm">
-                        <h3 class="font-black text-2xl mb-6 text-indigo-900 flex items-center gap-3 border-b pb-4"><i class="fas fa-robot text-indigo-500 bg-white p-3 rounded-xl shadow-sm"></i> الذكاء الاصطناعي</h3>
+                        <h3 class="font-black text-2xl mb-6 text-indigo-900 border-b pb-4"><i class="fas fa-robot text-indigo-500 bg-white p-3 rounded-xl shadow-sm"></i> الذكاء الاصطناعي</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div><label class="font-bold text-sm text-indigo-700 mb-2 block">مفتاح API</label><input id="set-api-key" class="w-full border-2 border-indigo-200 p-4 rounded-xl font-bold text-left outline-none bg-white" dir="ltr"><button onclick="admin.fetchModels()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-black mt-3"><i class="fas fa-sync-alt ml-1"></i> فحص النماذج</button></div>
                             <div><label class="font-bold text-sm text-indigo-700 mb-2 block">النموذج</label><select id="set-ai-model" class="w-full border-2 border-indigo-200 p-4 rounded-xl font-bold outline-none bg-white" dir="ltr"><option value="">-- اضغط فحص --</option></select></div>
                         </div>
                     </div>
-
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
-                        <h3 class="font-black text-2xl mb-6 text-slate-800 flex items-center gap-3 border-b pb-4"><i class="fas fa-file-contract text-emerald-500 bg-emerald-50 p-3 rounded-xl"></i> الصفحات الثابتة</h3>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
+                        <h3 class="font-black text-2xl mb-6 border-b pb-4"><i class="fas fa-file-contract text-emerald-500 bg-emerald-50 p-3 rounded-xl"></i> الصفحات الثابتة</h3>
                         <div class="space-y-6">
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">من نحن</label><textarea id="set-about" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none bg-slate-50"></textarea></div>
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">شروط الاستخدام</label><textarea id="set-terms" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none bg-slate-50"></textarea></div>
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">الخصوصية</label><textarea id="set-privacy" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none bg-slate-50"></textarea></div>
                         </div>
                     </div>
-                    
                     <div class="sticky bottom-6 z-40 bg-white/90 backdrop-blur-md p-4 rounded-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] border">
                         <button onclick="admin.saveSettings()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-black transition-transform hover:-translate-y-1 text-xl"><i class="fas fa-save ml-2"></i> حفظ جميع الإعدادات</button>
                     </div>
-                </div> 
+                </div>
 
-                <!-- ==================== TAB: VISIBILITY ==================== -->
+                <!-- VISIBILITY TAB -->
                 <div id="tab-visibility" class="adm-tab space-y-8">
-                    <!-- نفس كود الـ visibility السابق مع تضمينه -->
                     <div class="bg-gradient-to-r from-rose-500 to-orange-500 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6">
-                        <i class="fas fa-eye-slash text-7xl opacity-20 absolute"></i>
                         <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0"><i class="fas fa-eye-slash text-4xl"></i></div>
                         <div><h3 class="text-3xl font-black mb-2">محرك الإخفاء الذكي</h3><p class="font-bold opacity-90">اختر القسم واضغط إخفاء</p></div>
                     </div>
@@ -169,46 +154,51 @@
                     </div>
                 </div>
 
-                <!-- ==================== LESSONS ==================== -->
-                <div id="tab-lessons" class="adm-tab space-y-8"> 
-                    <!-- نفس هيكل الدروس السابق مع إضافة نوع السؤال -->
-                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-indigo-500"> 
+                <!-- LESSONS TAB -->
+                <div id="tab-lessons" class="adm-tab space-y-8">
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-indigo-500">
                         <div class="flex justify-between items-center mb-8 border-b pb-4">
                             <h4 class="font-black text-3xl text-indigo-900" id="l-form-title">إضافة درس جديد</h4>
                             <button onclick="admin.resetLessonForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold"><i class="fas fa-redo"></i> إفراغ</button>
                         </div>
                         <div class="bg-indigo-50 p-6 rounded-2xl mb-8 border">
                             <h5 class="text-sm font-black text-indigo-700 mb-4">مكان الدرس</h5>
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3"> 
-                                <select id="l-type" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none" onchange="admin.updateHierarchy('l')"><option value="public">تربية وتعليم</option><option value="azhar">أزهر</option></select> 
-                                <select id="l-stage" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none" onchange="admin.updateHierarchy('l')"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select> 
-                                <select id="l-grade" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none"></select> 
-                                <select id="l-subject" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none"></select> 
-                                <select id="l-unit" class="border-2 border-white p-3 rounded-xl font-bold bg-white outline-none"><option value="1">الوحدة الأولى</option><option value="2">الثانية</option><option value="3">الثالثة</option><option value="4">الرابعة</option><option value="5">الخامسة</option><option value="6">السادسة</option></select> 
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                <select id="l-type" class="border-2 border-white p-3 rounded-xl font-bold bg-white" onchange="admin.updateHierarchy('l')"><option value="public">تربية وتعليم</option><option value="azhar">أزهر</option></select>
+                                <select id="l-stage" class="border-2 border-white p-3 rounded-xl font-bold bg-white" onchange="admin.updateHierarchy('l')"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select>
+                                <select id="l-grade" class="border-2 border-white p-3 rounded-xl font-bold bg-white"></select>
+                                <select id="l-subject" class="border-2 border-white p-3 rounded-xl font-bold bg-white"></select>
+                                <select id="l-unit" class="border-2 border-white p-3 rounded-xl font-bold bg-white"><option value="1">الوحدة الأولى</option><option value="2">الثانية</option><option value="3">الثالثة</option><option value="4">الرابعة</option><option value="5">الخامسة</option><option value="6">السادسة</option></select>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                            <div class="space-y-4">
-                                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border">
-                                    <h5 class="font-black text-slate-800"><span class="bg-indigo-500 text-white w-6 h-6 rounded-md flex items-center justify-center text-xs">1</span> الشرح النصي</h5>
-                                    <button onclick="admin.generateAILesson()" id="btn-ai-lesson" class="bg-yellow-400 text-yellow-900 px-4 py-1.5 rounded-lg font-black shadow-sm text-xs"><i class="fas fa-magic"></i> توليد AI</button>
-                                </div>
-                                <input id="l-title" placeholder="عنوان الدرس" class="w-full border-2 border-slate-200 p-4 rounded-xl font-black text-lg outline-none focus:border-indigo-500 bg-slate-50"> 
-                                <textarea id="l-content" placeholder="محتوى الشرح..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-48 outline-none focus:border-indigo-500 bg-slate-50 leading-loose"></textarea> 
+                        <!-- الشروحات النصية المتعددة -->
+                        <div class="mb-8 border border-indigo-100 rounded-2xl p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h5 class="font-black text-indigo-800">📝 الشروحات النصية</h5>
+                                <button onclick="admin.addContentBlock()" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-200"><i class="fas fa-plus ml-1"></i> إضافة شرح</button>
                             </div>
-                            <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
-                                <h5 class="font-black text-blue-900 mb-5"><span class="bg-blue-500 text-white w-6 h-6 rounded-md flex items-center justify-center text-xs">2</span> فيديوهات</h5>
-                                <div class="flex flex-col gap-3 mb-5">
-                                    <input type="text" id="v-teacher" placeholder="اسم الأستاذ" class="w-full border-2 border-white p-3.5 rounded-xl font-bold bg-white">
-                                    <input type="text" id="v-url" placeholder="رابط يوتيوب" class="w-full border-2 border-white p-3.5 rounded-xl text-left bg-white" dir="ltr">
-                                    <button onclick="admin.addVideoToTemp()" class="bg-blue-600 text-white py-3.5 rounded-xl font-black"><i class="fas fa-plus ml-1"></i> إضافة</button>
+                            <div id="contents-container" class="space-y-4">
+                                <div class="content-block">
+                                    <input placeholder="عنوان الشرح (مثال: الشرح الأساسي)" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="الشرح الأساسي">
+                                    <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white"></textarea>
+                                    <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
                                 </div>
-                                <div id="temp-videos-list" class="space-y-2 flex-1 overflow-y-auto max-h-40 pr-2"></div>
                             </div>
                         </div>
+                        <!-- الفيديوهات -->
+                        <div class="bg-blue-50/50 p-6 rounded-2xl mb-8 border border-blue-100">
+                            <h5 class="font-black text-blue-900 mb-5">🎥 فيديوهات الدرس</h5>
+                            <div class="flex flex-col gap-3 mb-5">
+                                <input type="text" id="v-teacher" placeholder="اسم الأستاذ/ة" class="w-full border-2 border-white p-3.5 rounded-xl font-bold bg-white">
+                                <input type="text" id="v-url" placeholder="رابط يوتيوب" class="w-full border-2 border-white p-3.5 rounded-xl text-left bg-white" dir="ltr">
+                                <button onclick="admin.addVideoToTemp()" class="bg-blue-600 text-white py-3.5 rounded-xl font-black"><i class="fas fa-plus ml-1"></i> إضافة الفيديو</button>
+                            </div>
+                            <div id="temp-videos-list" class="space-y-2 flex-1 overflow-y-auto max-h-40 pr-2"></div>
+                        </div>
+                        <!-- الأسئلة -->
                         <div class="bg-emerald-50/50 p-6 md:p-8 rounded-[2rem] mb-8 border border-emerald-100">
                             <div class="flex justify-between items-center mb-6 border-b pb-5">
-                                <h5 class="font-black text-emerald-900"><span class="bg-emerald-500 text-white w-6 h-6 rounded-md flex items-center justify-center text-xs">3</span> تدريبات</h5>
+                                <h5 class="font-black text-emerald-900">❓ تدريبات</h5>
                                 <div class="flex gap-2 items-center bg-white p-1.5 rounded-xl border">
                                     <label class="text-xs font-bold text-emerald-600">عدد:</label>
                                     <input type="number" id="l-ai-q-count" value="5" class="w-12 border-none text-center font-black outline-none">
@@ -237,17 +227,16 @@
                             <label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border"><input type="checkbox" id="l-locked" class="w-6 h-6 accent-yellow-500"> <span class="font-black text-sm text-yellow-900"><i class="fas fa-crown"></i> VIP</span></label>
                             <label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border"><input type="checkbox" id="l-hidden" class="w-6 h-6 accent-red-500"> <span class="font-black text-sm text-red-900"><i class="fas fa-eye-slash"></i> إخفاء</span></label>
                         </div>
-                        <button id="l-save-btn" onclick="admin.saveLesson()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-indigo-700"><i class="fas fa-paper-plane ml-2"></i> حفظ الدرس</button> 
-                    </div> 
+                        <button id="l-save-btn" onclick="admin.saveLesson()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-indigo-700"><i class="fas fa-paper-plane ml-2"></i> حفظ الدرس</button>
+                    </div>
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border">
                         <h4 class="font-black text-2xl mb-8 text-slate-800 border-b pb-4"><i class="fas fa-archive text-indigo-400"></i> أرشيف الدروس</h4>
                         <div id="lessons-list-display" class="grid grid-cols-1 lg:grid-cols-2 gap-5 max-h-[700px] overflow-y-auto pr-2"></div>
                     </div>
-                </div> 
+                </div>
 
-                <!-- ==================== QUIZZES & SIMULATIONS مختصرة مع الأسئلة المتقدمة ==================== -->
+                <!-- QUIZZES TAB (مشابه للدروس مع الأسئلة المتقدمة) -->
                 <div id="tab-quizzes" class="adm-tab space-y-8">
-                    <!-- مشابه للدروس مع نوع السؤال -->
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-blue-500">
                         <div class="flex justify-between items-center mb-8 border-b pb-4"><h4 class="font-black text-3xl text-blue-900" id="q-form-title">إنشاء اختبار</h4><button onclick="admin.resetQuizForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold"><i class="fas fa-redo"></i> إفراغ</button></div>
                         <div class="bg-blue-50 p-6 rounded-2xl mb-8 border"><h5 class="text-sm font-black text-blue-700 mb-4">مسار الاختبار</h5><div class="grid grid-cols-2 md:grid-cols-5 gap-3"><select id="q-type" class="border-2 border-white p-3 rounded-xl font-bold bg-white" onchange="admin.updateHierarchy('q')"><option value="public">عام</option><option value="azhar">أزهر</option></select><select id="q-stage" class="border-2 border-white p-3 rounded-xl font-bold bg-white" onchange="admin.updateHierarchy('q')"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select><select id="q-grade" class="border-2 border-white p-3 rounded-xl font-bold bg-white"></select><select id="q-subject" class="border-2 border-white p-3 rounded-xl font-bold bg-white"></select><select id="q-unit" class="border-2 border-white p-3 rounded-xl font-bold bg-white"><option value="0">شامل</option><option value="1">الوحدة 1</option><option value="2">2</option><option value="3">3</option></select></div></div>
@@ -271,88 +260,52 @@
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border"><h4 class="font-black text-2xl mb-8 text-slate-800 border-b pb-4"><i class="fas fa-archive text-blue-400"></i> أرشيف الاختبارات</h4><div id="quizzes-list-display" class="grid grid-cols-1 lg:grid-cols-2 gap-5 max-h-[700px] overflow-y-auto pr-2"></div></div>
                 </div>
 
-                <!-- ==================== SIMULATIONS ==================== -->
-                <div id="tab-simulations" class="adm-tab space-y-8"> 
-                    <!-- نفس كود المحاكيات السابق -->
-                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-yellow-400"> 
+                <!-- SIMULATIONS TAB -->
+                <div id="tab-simulations" class="adm-tab space-y-8">
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-yellow-400">
                         <div class="flex justify-between items-center mb-8 border-b pb-4"><h3 class="font-black text-3xl text-yellow-900" id="sim-form-title">إنشاء محاكي</h3><button onclick="admin.resetSimForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold"><i class="fas fa-redo"></i> إفراغ</button></div>
-                        <div class="space-y-8"> 
-                            <input id="sim-name" placeholder="اسم المحاكي" class="w-full border-2 border-slate-200 p-5 rounded-xl font-black outline-none focus:border-yellow-400 text-xl bg-slate-50"> 
+                        <div class="space-y-8">
+                            <input id="sim-name" placeholder="اسم المحاكي" class="w-full border-2 border-slate-200 p-5 rounded-xl font-black outline-none focus:border-yellow-400 text-xl bg-slate-50">
                             <div class="bg-yellow-50/50 p-6 rounded-2xl border border-yellow-200"><h5 class="text-base font-black text-yellow-800 mb-5">الإعدادات</h5><div class="grid grid-cols-1 md:grid-cols-4 gap-4"><select id="sim-type" class="border-2 border-white p-4 rounded-xl font-bold bg-white" onchange="admin.updateHierarchy('sim')"><option value="public">عام</option><option value="azhar">أزهر</option></select><select id="sim-stage" class="border-2 border-white p-4 rounded-xl font-bold bg-white" onchange="admin.updateHierarchy('sim')"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select><select id="sim-grade" class="border-2 border-white p-4 rounded-xl font-bold bg-white"></select><input id="sim-time" type="number" placeholder="الوقت (دقيقة)" class="border-2 border-white p-4 rounded-xl font-black bg-white text-center"></div></div>
                             <div class="bg-slate-900 p-8 rounded-3xl shadow-lg text-white"><p class="font-black text-xl mb-3"><i class="fas fa-cogs text-yellow-400"></i> السحب العشوائي</p><div class="grid grid-cols-2 md:grid-cols-4 gap-5 text-center font-bold"><div class="bg-slate-800 p-4 rounded-2xl border"><label class="text-emerald-400 block mb-3 text-sm">عربي</label><input type="number" id="sim-ar" value="5" class="w-full border-2 border-slate-600 rounded-xl bg-slate-900 text-white text-center font-black p-3"></div><div class="bg-slate-800 p-4 rounded-2xl border"><label class="text-blue-400 block mb-3 text-sm">رياضة</label><input type="number" id="sim-ma" value="5" class="w-full border-2 border-slate-600 rounded-xl bg-slate-900 text-white text-center font-black p-3"></div><div class="bg-slate-800 p-4 rounded-2xl border"><label class="text-purple-400 block mb-3 text-sm">علوم</label><input type="number" id="sim-sc" value="5" class="w-full border-2 border-slate-600 rounded-xl bg-slate-900 text-white text-center font-black p-3"></div><div class="bg-slate-800 p-4 rounded-2xl border"><label class="text-rose-400 block mb-3 text-sm">إنجليزي</label><input type="number" id="sim-en" value="5" class="w-full border-2 border-slate-600 rounded-xl bg-slate-900 text-white text-center font-black p-3"></div></div></div>
                             <div class="flex gap-4 mb-8"><label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border"><input type="checkbox" id="sim-locked" class="w-6 h-6 accent-yellow-500"><span class="font-black text-sm text-yellow-900"><i class="fas fa-crown"></i> VIP</span></label><label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border"><input type="checkbox" id="sim-hidden" class="w-6 h-6 accent-red-500"><span class="font-black text-sm text-red-900"><i class="fas fa-eye-slash"></i> إخفاء</span></label></div>
-                            <button id="sim-save-btn" onclick="admin.saveSimulation()" class="w-full bg-yellow-400 text-yellow-900 py-5 rounded-2xl font-black text-2xl shadow-lg hover:bg-yellow-500"><i class="fas fa-rocket ml-2"></i> إطلاق المحاكي</button> 
-                        </div> 
+                            <button id="sim-save-btn" onclick="admin.saveSimulation()" class="w-full bg-yellow-400 text-yellow-900 py-5 rounded-2xl font-black text-2xl shadow-lg hover:bg-yellow-500"><i class="fas fa-rocket ml-2"></i> إطلاق المحاكي</button>
+                        </div>
                     </div>
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border"><h4 class="font-black text-2xl mb-8 text-slate-800 border-b pb-4"><i class="fas fa-archive text-yellow-500"></i> أرشيف المحاكيات</h4><div id="simulations-list-display" class="grid grid-cols-1 lg:grid-cols-2 gap-5 max-h-[700px] overflow-y-auto pr-2"></div></div>
                 </div>
 
-                <!-- ==================== FILES MANAGEMENT ==================== -->
+                <!-- FILES MANAGEMENT -->
                 <div id="tab-files-mgmt" class="adm-tab space-y-8">
-                    <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6">
-                        <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0"><i class="fas fa-book text-4xl"></i></div>
-                        <div><h3 class="text-3xl font-black mb-2">الكتب والمذكرات</h3><p class="font-bold opacity-90">أضف روابط الكتب والملفات مع تصنيفها</p></div>
-                    </div>
+                    <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-book text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">الكتب والمذكرات</h3><p class="font-bold opacity-90">أضف روابط الكتب والملفات مع تصنيفها</p></div></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
                         <h4 class="font-black text-xl mb-6" id="file-form-title">إضافة ملف جديد</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <input id="file-title" placeholder="عنوان الملف" class="border-2 border-slate-200 p-4 rounded-xl font-black bg-slate-50">
-                            <input id="file-url" placeholder="رابط الملف" class="border-2 border-slate-200 p-4 rounded-xl text-left bg-slate-50" dir="ltr">
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-slate-50 p-5 rounded-2xl">
-                            <select id="file-type" class="border-2 p-3 rounded-xl font-bold bg-white"><option value="public">تربية وتعليم</option><option value="azhar">أزهر</option></select>
-                            <select id="file-stage" class="border-2 p-3 rounded-xl font-bold bg-white"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select>
-                            <select id="file-grade" class="border-2 p-3 rounded-xl font-bold bg-white"><option value="1">الصف الأول</option><option value="2">الثاني</option><option value="3">الثالث</option><option value="4">الرابع</option><option value="5">الخامس</option><option value="6">السادس</option></select>
-                            <input id="file-subject" placeholder="المادة (اختياري)" class="border-2 p-3 rounded-xl font-bold bg-white">
-                        </div>
-                        <div class="flex gap-4 mb-8">
-                            <button onclick="admin.saveFile()" id="file-save-btn" class="flex-1 bg-cyan-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-cyan-700"><i class="fas fa-save ml-2"></i> حفظ الملف</button>
-                            <button onclick="admin.resetFileForm()" class="bg-slate-100 text-slate-600 px-6 py-4 rounded-2xl font-bold"><i class="fas fa-redo"></i> إفراغ</button>
-                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><input id="file-title" placeholder="عنوان الملف" class="border-2 p-4 rounded-xl font-black bg-slate-50"><input id="file-url" placeholder="رابط الملف" class="border-2 p-4 rounded-xl text-left bg-slate-50" dir="ltr"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-slate-50 p-5 rounded-2xl"><select id="file-type" class="border-2 p-3 rounded-xl font-bold bg-white"><option value="public">تربية وتعليم</option><option value="azhar">أزهر</option></select><select id="file-stage" class="border-2 p-3 rounded-xl font-bold bg-white"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select><select id="file-grade" class="border-2 p-3 rounded-xl font-bold bg-white"><option value="1">الصف الأول</option><option value="2">الثاني</option><option value="3">الثالث</option><option value="4">الرابع</option><option value="5">الخامس</option><option value="6">السادس</option></select><input id="file-subject" placeholder="المادة (اختياري)" class="border-2 p-3 rounded-xl font-bold bg-white"></div>
+                        <div class="flex gap-4 mb-8"><button onclick="admin.saveFile()" id="file-save-btn" class="flex-1 bg-cyan-600 text-white py-4 rounded-2xl font-black"><i class="fas fa-save ml-2"></i> حفظ الملف</button><button onclick="admin.resetFileForm()" class="bg-slate-100 text-slate-600 px-6 py-4 rounded-2xl font-bold"><i class="fas fa-redo"></i> إفراغ</button></div>
                     </div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
-                        <h4 class="font-black text-xl mb-6">الملفات الحالية</h4>
-                        <div id="files-mgmt-list" class="space-y-3 max-h-[600px] overflow-y-auto stagger-animation"></div>
-                    </div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">الملفات الحالية</h4><div id="files-mgmt-list" class="space-y-3 max-h-[600px] overflow-y-auto stagger-animation"></div></div>
                 </div>
 
-                <!-- ==================== CUSTOM SUBJECTS ==================== -->
+                <!-- CUSTOM SUBJECTS -->
                 <div id="tab-subjects-mgmt" class="adm-tab space-y-8">
-                    <div class="bg-gradient-to-r from-fuchsia-500 to-purple-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6">
-                        <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0"><i class="fas fa-th-large text-4xl"></i></div>
-                        <div><h3 class="text-3xl font-black mb-2">المواد المخصصة</h3><p class="font-bold opacity-90">أضف مواد إضافية تظهر في المراحل</p></div>
-                    </div>
+                    <div class="bg-gradient-to-r from-fuchsia-500 to-purple-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-th-large text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">المواد المخصصة</h3><p class="font-bold opacity-90">أضف مواد إضافية تظهر في المراحل</p></div></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
                         <h4 class="font-black text-xl mb-6">إضافة مادة جديدة</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <select id="custom-stage" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select>
-                            <input id="custom-name" placeholder="اسم المادة" class="border-2 p-4 rounded-xl font-bold bg-slate-50">
-                            <input id="custom-icon" placeholder="أيقونة (fa-star)" class="border-2 p-4 rounded-xl font-bold bg-slate-50" value="fa-star">
-                        </div>
-                        <button onclick="admin.addCustomSubject()" class="w-full bg-fuchsia-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-fuchsia-700"><i class="fas fa-plus ml-2"></i> إضافة المادة</button>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><select id="custom-stage" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select><input id="custom-name" placeholder="اسم المادة" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><input id="custom-icon" placeholder="أيقونة (fa-star)" class="border-2 p-4 rounded-xl font-bold bg-slate-50" value="fa-star"></div>
+                        <button onclick="admin.addCustomSubject()" class="w-full bg-fuchsia-600 text-white py-4 rounded-2xl font-black"><i class="fas fa-plus ml-2"></i> إضافة المادة</button>
                     </div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
-                        <h4 class="font-black text-xl mb-6">المواد المضافة</h4>
-                        <div id="custom-subjects-list" class="space-y-3 stagger-animation"></div>
-                    </div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">المواد المضافة</h4><div id="custom-subjects-list" class="space-y-3 stagger-animation"></div></div>
                 </div>
 
-                <!-- ==================== LEADERBOARD MANAGEMENT ==================== -->
+                <!-- LEADERBOARD MANAGEMENT -->
                 <div id="tab-leaderboard-mgmt" class="adm-tab space-y-8">
                     <div class="bg-gradient-to-r from-amber-500 to-yellow-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-trophy text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">المتصدرين</h3></div></div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
-                        <h4 class="font-black text-xl mb-6">مسح التصنيفات</h4>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <button onclick="admin.resetLeaderboard('daily')" class="bg-red-50 text-red-600 p-4 rounded-xl font-black hover:bg-red-100 border border-red-200">مسح اليومي</button>
-                            <button onclick="admin.resetLeaderboard('weekly')" class="bg-orange-50 text-orange-600 p-4 rounded-xl font-black hover:bg-orange-100 border border-orange-200">الأسبوعي</button>
-                            <button onclick="admin.resetLeaderboard('monthly')" class="bg-amber-50 text-amber-600 p-4 rounded-xl font-black hover:bg-amber-100 border border-amber-200">الشهري</button>
-                            <button onclick="admin.resetLeaderboard('allTime')" class="bg-slate-50 text-slate-600 p-4 rounded-xl font-black hover:bg-slate-100 border border-slate-200">الكل</button>
-                        </div>
-                    </div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">مسح التصنيفات</h4><div class="grid grid-cols-2 md:grid-cols-4 gap-4"><button onclick="admin.resetLeaderboard('daily')" class="bg-red-50 text-red-600 p-4 rounded-xl font-black hover:bg-red-100 border border-red-200">مسح اليومي</button><button onclick="admin.resetLeaderboard('weekly')" class="bg-orange-50 text-orange-600 p-4 rounded-xl font-black hover:bg-orange-100 border border-orange-200">الأسبوعي</button><button onclick="admin.resetLeaderboard('monthly')" class="bg-amber-50 text-amber-600 p-4 rounded-xl font-black hover:bg-amber-100 border border-amber-200">الشهري</button><button onclick="admin.resetLeaderboard('allTime')" class="bg-slate-50 text-slate-600 p-4 rounded-xl font-black hover:bg-slate-100 border border-slate-200">الكل</button></div></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">ملفات الطلاب</h4><div id="students-profiles-list" class="space-y-3 max-h-[500px] overflow-y-auto stagger-animation"></div></div>
                 </div>
 
-                <!-- ==================== LIVE SESSIONS MANAGEMENT ==================== -->
+                <!-- LIVE SESSIONS MANAGEMENT -->
                 <div id="tab-live-sessions-mgmt" class="adm-tab space-y-8">
                     <div class="bg-gradient-to-r from-red-500 to-rose-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-broadcast-tower text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">البث المباشر</h3></div></div>
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-red-500">
@@ -365,44 +318,43 @@
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border"><h4 class="font-black text-xl mb-6">الجلسات الحالية</h4><div id="sessions-mgmt-list" class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto stagger-animation"></div></div>
                 </div>
 
-                <!-- ==================== COMMUNITY MANAGEMENT ==================== -->
+                <!-- COMMUNITY MANAGEMENT -->
                 <div id="tab-community-mgmt" class="adm-tab space-y-8">
                     <div class="bg-gradient-to-r from-purple-500 to-pink-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-users text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">المجتمع</h3></div></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">منشورات المنتدى</h4><div id="forums-mgmt-list" class="space-y-3 max-h-[500px] overflow-y-auto stagger-animation"></div></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">مجموعات الدراسة</h4><button onclick="admin.createStudyGroup()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black mb-6"><i class="fas fa-plus"></i> إنشاء مجموعة</button><div id="groups-mgmt-list" class="space-y-3 max-h-[400px] overflow-y-auto stagger-animation"></div></div>
                 </div>
 
-                <!-- ==================== USERS ==================== -->
-                <div id="tab-users" class="adm-tab space-y-8"> 
-                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-emerald-500"> 
-                        <h4 class="font-black text-2xl mb-8 text-emerald-900"><i class="fas fa-user-plus bg-emerald-100 p-3 rounded-xl"></i> حساب جديد</h4> 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8"><input id="new-user-name" placeholder="اسم المستخدم" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><input id="new-user-pass" placeholder="الرقم السري" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><div class="relative"><span class="absolute left-4 top-4 text-slate-400">أيام</span><input id="new-user-duration" type="number" value="30" class="w-full border-2 p-4 rounded-xl font-black bg-slate-50 text-center"></div></div> 
-                        <button onclick="admin.addUser()" class="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black shadow-lg"><i class="fas fa-id-card ml-2"></i> تفعيل</button> 
-                    </div> 
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm overflow-hidden border"> 
+                <!-- USERS TAB -->
+                <div id="tab-users" class="adm-tab space-y-8">
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-emerald-500">
+                        <h4 class="font-black text-2xl mb-8 text-emerald-900"><i class="fas fa-user-plus bg-emerald-100 p-3 rounded-xl"></i> حساب جديد</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8"><input id="new-user-name" placeholder="اسم المستخدم" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><input id="new-user-pass" placeholder="الرقم السري" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><div class="relative"><span class="absolute left-4 top-4 text-slate-400">أيام</span><input id="new-user-duration" type="number" value="30" class="w-full border-2 p-4 rounded-xl font-black bg-slate-50 text-center"></div></div>
+                        <button onclick="admin.addUser()" class="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black shadow-lg"><i class="fas fa-id-card ml-2"></i> تفعيل</button>
+                    </div>
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm overflow-hidden border">
                         <h4 class="font-black text-2xl mb-8 text-slate-800 border-b pb-4"><i class="fas fa-users text-slate-400"></i> قاعدة البيانات</h4>
                         <div class="overflow-x-auto"><table class="w-full text-right border-collapse whitespace-nowrap"><thead class="bg-slate-100 text-slate-600 text-sm"><tr><th class="p-4 rounded-tr-xl font-black">الحالة</th><th class="p-4 font-black">الاسم</th><th class="p-4 font-black">الرقم السري</th><th class="p-4 font-black">انتهاء الاشتراك</th><th class="p-4 rounded-tl-xl text-center font-black">إجراءات</th></tr></thead><tbody id="users-list-body" class="text-sm font-bold text-slate-700"></tbody></table></div>
-                    </div> 
+                    </div>
                 </div>
 
-                <!-- ==================== POSTS & ANNOUNCEMENTS ==================== -->
-                <div id="tab-posts" class="adm-tab space-y-8"> 
-                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-orange-500"> 
-                        <h3 class="font-black text-2xl mb-8 text-orange-800"><i class="fas fa-newspaper bg-orange-100 p-3 rounded-xl"></i> خبر جديد</h3> 
-                        <div class="space-y-5"><input id="post-title" placeholder="عنوان الخبر" class="w-full border-2 p-4 rounded-xl font-black text-xl bg-slate-50"><textarea id="post-content" placeholder="تفاصيل الخبر" class="w-full border-2 p-4 rounded-xl font-bold h-40 bg-slate-50"></textarea><input id="post-image" placeholder="رابط صورة" class="w-full border-2 p-4 rounded-xl text-left bg-slate-50" dir="ltr"><button onclick="admin.addPost()" class="w-full bg-orange-500 text-white py-4 rounded-2xl font-black shadow-lg"><i class="fas fa-paper-plane ml-2"></i> نشر</button></div> 
+                <!-- POSTS & ANNOUNCEMENTS -->
+                <div id="tab-posts" class="adm-tab space-y-8">
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-orange-500">
+                        <h3 class="font-black text-2xl mb-8 text-orange-800"><i class="fas fa-newspaper bg-orange-100 p-3 rounded-xl"></i> خبر جديد</h3>
+                        <div class="space-y-5"><input id="post-title" placeholder="عنوان الخبر" class="w-full border-2 p-4 rounded-xl font-black text-xl bg-slate-50"><textarea id="post-content" placeholder="تفاصيل الخبر" class="w-full border-2 p-4 rounded-xl font-bold h-40 bg-slate-50"></textarea><input id="post-image" placeholder="رابط صورة" class="w-full border-2 p-4 rounded-xl text-left bg-slate-50" dir="ltr"><button onclick="admin.addPost()" class="w-full bg-orange-500 text-white py-4 rounded-2xl font-black shadow-lg"><i class="fas fa-paper-plane ml-2"></i> نشر</button></div>
                     </div>
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border"><h4 class="font-black text-xl mb-6">الأخبار السابقة</h4><div id="posts-list-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto"></div></div>
                 </div>
-
-                <div id="tab-announcements" class="adm-tab space-y-8"> 
-                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-rose-500"> 
+                <div id="tab-announcements" class="adm-tab space-y-8">
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-rose-500">
                         <div class="bg-rose-50 p-5 rounded-2xl mb-8 border"><i class="fas fa-info-circle text-rose-500 text-3xl"></i><h3 class="font-black text-xl text-rose-800">رسالة البوب أب</h3></div>
-                        <div class="space-y-6"><textarea id="ann-text" rows="4" placeholder="نص الإعلان" class="w-full border-2 rounded-2xl p-5 font-black text-lg bg-slate-50"></textarea><div class="flex gap-4 bg-slate-50 p-4 rounded-2xl"><div class="flex items-center gap-3 flex-1 bg-white p-3 rounded-xl border"><label class="font-bold text-sm">المدة (أيام)</label><input type="number" id="ann-expiry" value="3" class="border-2 rounded-lg p-2 w-20 font-black text-center text-rose-600"></div><label class="flex items-center gap-3 bg-white p-3 rounded-xl border cursor-pointer"><input type="checkbox" id="ann-active" class="w-6 h-6 accent-rose-500"><span class="font-black text-rose-600">تفعيل</span></label></div><button onclick="admin.saveAnnouncement()" class="w-full bg-rose-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg"><i class="fas fa-broadcast-tower ml-2"></i> حفظ</button></div> 
+                        <div class="space-y-6"><textarea id="ann-text" rows="4" placeholder="نص الإعلان" class="w-full border-2 rounded-2xl p-5 font-black text-lg bg-slate-50"></textarea><div class="flex gap-4 bg-slate-50 p-4 rounded-2xl"><div class="flex items-center gap-3 flex-1 bg-white p-3 rounded-xl border"><label class="font-bold text-sm">المدة (أيام)</label><input type="number" id="ann-expiry" value="3" class="border-2 rounded-lg p-2 w-20 font-black text-center text-rose-600"></div><label class="flex items-center gap-3 bg-white p-3 rounded-xl border cursor-pointer"><input type="checkbox" id="ann-active" class="w-6 h-6 accent-rose-500"><span class="font-black text-rose-600">تفعيل</span></label></div><button onclick="admin.saveAnnouncement()" class="w-full bg-rose-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg"><i class="fas fa-broadcast-tower ml-2"></i> حفظ</button></div>
                     </div>
                 </div>
             </div>
         </main>
-    </div> 
+    </div>
 
     <script>
         const firebaseConfig = {
@@ -500,7 +452,6 @@
                         document.getElementById('set-about').value = set.aboutText || '';
                         document.getElementById('set-terms').value = set.termsText || '';
                         document.getElementById('set-privacy').value = set.privacyText || '';
-                        // social links
                         const sl = set.socialLinks || {};
                         document.getElementById('set-fb').value = sl.facebook || '';
                         document.getElementById('set-yt').value = sl.youtube || '';
@@ -512,6 +463,19 @@
                         if(admin.dbData.announcements.expiry) document.getElementById('ann-expiry').value = Math.ceil((admin.dbData.announcements.expiry - Date.now()) / 86400000);
                     }
                 });
+            },
+
+            // إضافة كتلة شرح جديدة
+            addContentBlock: () => {
+                const container = document.getElementById('contents-container');
+                const div = document.createElement('div');
+                div.className = 'content-block';
+                div.innerHTML = `
+                    <input placeholder="عنوان الشرح" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="">
+                    <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white"></textarea>
+                    <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
+                `;
+                container.appendChild(div);
             },
 
             toggleQuestionTypeFields: (prefix) => {
@@ -563,7 +527,6 @@
                 }).then(()=>app.notify("تم حفظ الإعدادات")); 
             },
 
-            // Visibility
             updateVisHierarchy: () => {
                 const stage = document.getElementById('vis-stage').value;
                 const gradeSelect = document.getElementById('vis-grade');
@@ -593,13 +556,13 @@
                 list.innerHTML = hiddenKeys.map(k => `<div class="bg-red-50 p-4 rounded-xl flex justify-between"><span class="font-black text-red-900 text-sm">${k}</span><button onclick="database.ref('settings/visibility/${k}').set(true)" class="bg-white text-emerald-600 px-3 py-1 rounded-lg font-bold text-xs">إظهار</button></div>`).join('');
             },
 
-            // ==================== LESSONS ====================
             generateAILesson: async () => {
                 const topic = document.getElementById('l-title').value; if(!topic) return app.notify("اكتب العنوان أولاً", "error");
                 const btn = document.getElementById('btn-ai-lesson'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...'; btn.disabled = true;
                 try {
                     const prompt = `اكتب شرحاً تعليمياً مفصلاً حول: ${topic}. استخدم التنسيق التالي: # للعناوين الرئيسية، ## للعناوين الفرعية، ** للنص المهم، :::info للتنبيهات، :::warning للتحذيرات، - للقوائم، > للاقتباسات.`;
-                    document.getElementById('l-content').value = await aiHelper.generate(prompt);
+                    const text = await aiHelper.generate(prompt);
+                    document.querySelector('#contents-container .content-text').value = text;
                     app.notify("تم التوليد");
                 } catch(e) { alert(e.message); }
                 btn.innerHTML = '<i class="fas fa-magic"></i> توليد AI'; btn.disabled = false;
@@ -614,33 +577,101 @@
                 } catch(e) { alert(e.message); }
                 btn.innerHTML = '<i class="fas fa-robot"></i> توليد'; btn.disabled = false;
             },
+
             addVideoToTemp: () => {
                 const name = document.getElementById('v-teacher').value.trim(), url = document.getElementById('v-url').value.trim();
                 if(name && url) { admin.tempVideos.push({ name, url }); admin.renderTempVideos(); document.getElementById('v-teacher').value = ''; document.getElementById('v-url').value = ''; }
             },
             renderTempVideos: () => { document.getElementById('temp-videos-list').innerHTML = admin.tempVideos.map((v,i) => `<div class="bg-white p-3 rounded-xl flex justify-between text-sm"><span><i class="fas fa-video ml-2"></i>${v.name}</span><button onclick="admin.tempVideos.splice(${i},1);admin.renderTempVideos()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join(''); },
+
             saveLesson: () => {
-                const title = document.getElementById('l-title').value, content = document.getElementById('l-content').value;
+                const title = document.getElementById('l-title').value;
                 if(!title) return app.notify("العنوان مطلوب", "error");
-                const payload = { title, content, type: document.getElementById('l-type').value, stage: document.getElementById('l-stage').value, grade: document.getElementById('l-grade').value, subject: document.getElementById('l-subject').value, unit: document.getElementById('l-unit').value, videos: admin.tempVideos, questions: admin.tempLessonQuestions, isLocked: document.getElementById('l-locked').checked, isHidden: document.getElementById('l-hidden').checked };
+                // جمع الشروحات من الحقول
+                const contents = [];
+                document.querySelectorAll('#contents-container .content-block').forEach(block => {
+                    const titleEl = block.querySelector('.content-title');
+                    const textEl = block.querySelector('.content-text');
+                    if (titleEl && textEl) {
+                        contents.push({ title: titleEl.value || 'شرح', content: textEl.value });
+                    }
+                });
+                const payload = {
+                    title,
+                    contents: contents.length > 0 ? contents : [{ title: 'الشرح', content: '' }],
+                    type: document.getElementById('l-type').value,
+                    stage: document.getElementById('l-stage').value,
+                    grade: document.getElementById('l-grade').value,
+                    subject: document.getElementById('l-subject').value,
+                    unit: document.getElementById('l-unit').value,
+                    videos: admin.tempVideos,
+                    questions: admin.tempLessonQuestions,
+                    isLocked: document.getElementById('l-locked').checked,
+                    isHidden: document.getElementById('l-hidden').checked
+                };
                 if(admin.editLessonId) { database.ref('lessons/' + admin.editLessonId).set(payload).then(() => { app.notify("تم التحديث"); admin.resetLessonForm(); }); }
                 else { database.ref('lessons').push(payload).then(() => { app.notify("تم الحفظ"); admin.resetLessonForm(); }); }
             },
             editLesson: (id) => {
                 const l = admin.dbData.lessons[id]; if(!l) return;
-                admin.editLessonId = id; document.getElementById('l-type').value = l.type; document.getElementById('l-stage').value = l.stage; admin.updateHierarchy('l');
+                admin.editLessonId = id;
+                document.getElementById('l-type').value = l.type;
+                document.getElementById('l-stage').value = l.stage;
+                admin.updateHierarchy('l');
                 setTimeout(() => { document.getElementById('l-grade').value = l.grade; document.getElementById('l-subject').value = l.subject; }, 100);
-                document.getElementById('l-unit').value = l.unit || 1; document.getElementById('l-title').value = l.title; document.getElementById('l-content').value = l.content; 
-                document.getElementById('l-locked').checked = l.isLocked || false; document.getElementById('l-hidden').checked = l.isHidden || false;
-                admin.tempVideos = l.videos || []; admin.renderTempVideos(); admin.tempLessonQuestions = l.questions || []; admin.renderTempQuestions('l');
-                document.getElementById('l-form-title').innerText = "تعديل: " + l.title; 
+                document.getElementById('l-unit').value = l.unit || 1;
+                document.getElementById('l-title').value = l.title;
+                document.getElementById('l-locked').checked = l.isLocked || false;
+                document.getElementById('l-hidden').checked = l.isHidden || false;
+                admin.tempVideos = l.videos || [];
+                admin.renderTempVideos();
+                admin.tempLessonQuestions = l.questions || [];
+                admin.renderTempQuestions('l');
+                // ملء الشروحات
+                const container = document.getElementById('contents-container');
+                container.innerHTML = '';
+                if (l.contents && Array.isArray(l.contents)) {
+                    l.contents.forEach(c => {
+                        const div = document.createElement('div');
+                        div.className = 'content-block';
+                        div.innerHTML = `
+                            <input placeholder="عنوان الشرح" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="${c.title || ''}">
+                            <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white">${c.content || ''}</textarea>
+                            <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else if (l.content) {
+                    const div = document.createElement('div');
+                    div.className = 'content-block';
+                    div.innerHTML = `
+                        <input placeholder="عنوان الشرح" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="الشرح">
+                        <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white">${l.content}</textarea>
+                        <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
+                    `;
+                    container.appendChild(div);
+                }
+                document.getElementById('l-form-title').innerText = "تعديل: " + l.title;
                 document.getElementById('l-save-btn').innerHTML = "<i class='fas fa-save ml-2'></i> حفظ التحديثات";
                 window.scrollTo({top: 0, behavior: 'smooth'});
             },
             resetLessonForm: () => {
-                admin.editLessonId = null; document.getElementById('l-title').value = ''; document.getElementById('l-content').value = ''; document.getElementById('l-locked').checked = false; document.getElementById('l-hidden').checked = false;
-                admin.tempVideos = []; admin.tempLessonQuestions = []; admin.renderTempVideos(); admin.renderTempQuestions('l');
-                document.getElementById('l-form-title').innerText = "إضافة درس جديد"; 
+                admin.editLessonId = null;
+                document.getElementById('l-title').value = '';
+                document.getElementById('l-locked').checked = false;
+                document.getElementById('l-hidden').checked = false;
+                admin.tempVideos = [];
+                admin.tempLessonQuestions = [];
+                admin.renderTempVideos();
+                admin.renderTempQuestions('l');
+                document.getElementById('contents-container').innerHTML = `
+                    <div class="content-block">
+                        <input placeholder="عنوان الشرح" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="الشرح الأساسي">
+                        <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white"></textarea>
+                        <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
+                    </div>
+                `;
+                document.getElementById('l-form-title').innerText = "إضافة درس جديد";
                 document.getElementById('l-save-btn').innerHTML = "<i class='fas fa-paper-plane ml-2'></i> حفظ الدرس";
             },
             renderLessons: () => {
@@ -652,7 +683,6 @@
                     </div>`).join('');
             },
 
-            // ==================== QUESTIONS ====================
             addQuestionToTemp: (prefix) => {
                 const type = document.getElementById(`${prefix}-q-type`).value;
                 const text = document.getElementById(`${prefix}-q-text`).value;
@@ -689,7 +719,6 @@
                 `).join('');
             },
 
-            // ==================== QUIZZES & SIMS ====================
             saveQuiz: () => {
                 const name = document.getElementById('q-title').value; if(!name||!admin.tempQuizQuestions.length) return app.notify("الاسم والأسئلة مطلوبان", "error");
                 const payload = { name, type: document.getElementById('q-type').value, stage: document.getElementById('q-stage').value, grade: document.getElementById('q-grade').value, subject: document.getElementById('q-subject').value, unit: document.getElementById('q-unit').value, questions: admin.tempQuizQuestions, isLocked: document.getElementById('q-locked').checked, isHidden: document.getElementById('q-hidden').checked };
@@ -721,6 +750,7 @@
                         <div class="flex gap-2 opacity-0 group-hover:opacity-100"><button onclick="admin.editQuiz('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف؟')) database.ref('quizzes/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold"><i class="fas fa-trash"></i></button></div>
                     </div>`).join('');
             },
+
             saveSimulation: () => {
                 const name = document.getElementById('sim-name').value; if(!name) return app.notify("الاسم مطلوب", "error");
                 const payload = { name, type: document.getElementById('sim-type').value, stage: document.getElementById('sim-stage').value, grade: document.getElementById('sim-grade').value, time: document.getElementById('sim-time').value, counts: { ar: document.getElementById('sim-ar').value, ma: document.getElementById('sim-ma').value, sc: document.getElementById('sim-sc').value, en: document.getElementById('sim-en').value }, isLocked: document.getElementById('sim-locked').checked, isHidden: document.getElementById('sim-hidden').checked };
@@ -749,7 +779,7 @@
                     </div>`).join('');
             },
 
-            // ==================== FILES ====================
+            // إدارة الملفات
             saveFile: () => {
                 const title = document.getElementById('file-title').value, url = document.getElementById('file-url').value;
                 if(!title||!url) return app.notify("العنوان والرابط مطلوبان", "error");
@@ -799,7 +829,7 @@
                 `).join('') : '<p class="text-slate-400 text-center py-8">لا توجد ملفات</p>';
             },
 
-            // ==================== CUSTOM SUBJECTS ====================
+            // المواد المخصصة
             addCustomSubject: () => {
                 const stage = document.getElementById('custom-stage').value;
                 const name = document.getElementById('custom-name').value.trim();
@@ -836,12 +866,14 @@
                 });
             },
 
-            // ==================== LEADERBOARD, SESSIONS, COMMUNITY ====================
+            // المتصدرين
             resetLeaderboard: (period) => { if(confirm('مسح '+period+'؟')) database.ref('leaderboard/'+period).set({}).then(()=>app.notify("تم المسح")); },
             renderLeaderboardMgmt: () => {
                 const profiles = Object.entries(admin.dbData.studentProfiles||{}).sort((a,b)=>(b[1].totalXP||0)-(a[1].totalXP||0));
                 document.getElementById('students-profiles-list').innerHTML = profiles.length ? profiles.map(([name,data],i)=>`<div class="bg-white p-5 rounded-2xl border flex justify-between"><div><span class="text-2xl font-black ml-4">${i+1}</span>${name} - مستوى ${data.level||1} | ${data.totalXP||0} XP</div><button onclick="if(confirm('حذف؟')) database.ref('studentProfiles/${name}').remove()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد بيانات</p>';
             },
+
+            // البث المباشر
             saveLiveSession: () => {
                 const title = document.getElementById('session-title').value; if(!title) return app.notify("العنوان مطلوب","error");
                 const payload = { title, teacher: document.getElementById('session-teacher').value||'غير محدد', status: document.getElementById('session-status').value, scheduledTime: document.getElementById('session-time').value?new Date(document.getElementById('session-time').value).getTime():Date.now(), duration: parseInt(document.getElementById('session-duration').value)||60, youtubeLiveUrl: document.getElementById('session-youtube').value, zoomLink: document.getElementById('session-zoom').value };
@@ -867,6 +899,8 @@
                 const sessions = Object.entries(admin.dbData.liveSessions||{}).reverse();
                 document.getElementById('sessions-mgmt-list').innerHTML = sessions.length ? sessions.map(([id,s])=>`<div class="bg-white p-5 rounded-2xl border"><div class="flex justify-between"><h5 class="font-black">${s.title}</h5><span class="text-xs font-black px-3 py-1 rounded-full ${s.status==='live'?'bg-red-100 text-red-600':s.status==='upcoming'?'bg-blue-100 text-blue-600':'bg-slate-100'}">${s.status==='live'?'🔴 مباشر':s.status==='upcoming'?'📅 قادم':'✅ منتهي'}</span></div><div class="flex gap-2 mt-3"><button onclick="admin.editLiveSession('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف؟')) database.ref('liveSessions/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs"><i class="fas fa-trash"></i></button></div></div>`).join('') : '<p class="col-span-2 text-center py-8 text-slate-400">لا توجد جلسات</p>';
             },
+
+            // المجتمع
             renderCommunityMgmt: () => {
                 const forums = Object.entries(admin.dbData.community?.forums||{}).reverse();
                 document.getElementById('forums-mgmt-list').innerHTML = forums.length ? forums.map(([id,post])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between"><div><h5 class="font-black">${post.title}</h5><p class="text-xs">${post.author} | ❤️ ${post.likes||0}</p></div><button onclick="if(confirm('حذف؟')) database.ref('community/forums/${id}').remove()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد منشورات</p>';
@@ -878,7 +912,7 @@
                 database.ref('community/studyGroups').push({name, members:[], createdBy:'admin', createdAt:Date.now()}).then(()=>app.notify("تم الإنشاء"));
             },
 
-            // ==================== USERS, POSTS, ANNOUNCEMENTS ====================
+            // الطلاب والأخبار والإعلانات
             addUser: () => { 
                 const u = document.getElementById('new-user-name').value, p = document.getElementById('new-user-pass').value, d = document.getElementById('new-user-duration').value; 
                 if(!u||!p) return app.notify("أكمل البيانات","error"); 
