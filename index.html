@@ -171,18 +171,17 @@
                                 <select id="l-unit" class="border-2 border-white p-3 rounded-xl font-bold bg-white"><option value="1">الوحدة الأولى</option><option value="2">الثانية</option><option value="3">الثالثة</option><option value="4">الرابعة</option><option value="5">الخامسة</option><option value="6">السادسة</option></select>
                             </div>
                         </div>
-                        <!-- الشروحات النصية المتعددة -->
+                        <!-- شرح نصي واحد مع إمكانية إدراج صور -->
                         <div class="mb-8 border border-indigo-100 rounded-2xl p-6">
                             <div class="flex justify-between items-center mb-4">
-                                <h5 class="font-black text-indigo-800">📝 الشروحات النصية</h5>
-                                <button onclick="admin.addContentBlock()" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-200"><i class="fas fa-plus ml-1"></i> إضافة شرح</button>
+                                <h5 class="font-black text-indigo-800">📝 شرح الدرس</h5>
+                                <button onclick="admin.generateAILesson()" id="btn-ai-lesson" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-black shadow-sm text-xs hover:bg-yellow-500"><i class="fas fa-magic"></i> توليد AI</button>
                             </div>
-                            <div id="contents-container" class="space-y-4">
-                                <div class="content-block">
-                                    <input placeholder="عنوان الشرح (مثال: الشرح الأساسي)" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="الشرح الأساسي">
-                                    <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white"></textarea>
-                                    <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
-                                </div>
+                            <input id="l-title" placeholder="عنوان الدرس" class="w-full border-2 border-slate-200 p-3 rounded-xl font-black text-lg mb-3 bg-white">
+                            <textarea id="l-content" placeholder="محتوى الشرح... يمكنك إدراج صور باستخدام ![وصف](رابط الصورة) في أي مكان" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-48 outline-none focus:border-indigo-500 bg-white"></textarea>
+                            <div class="mt-3 flex gap-4">
+                                <label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border"><input type="checkbox" id="l-locked" class="w-6 h-6 accent-yellow-500"> <span class="font-black text-sm text-yellow-900"><i class="fas fa-crown"></i> VIP</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border"><input type="checkbox" id="l-hidden" class="w-6 h-6 accent-red-500"> <span class="font-black text-sm text-red-900"><i class="fas fa-eye-slash"></i> إخفاء</span></label>
                             </div>
                         </div>
                         <!-- الفيديوهات -->
@@ -222,10 +221,6 @@
                                 <button onclick="admin.addBulkQuestions('l')" class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-black text-sm">استيراد</button>
                             </div>
                             <div id="temp-l-questions-list" class="space-y-2 max-h-56 overflow-y-auto pr-2"></div>
-                        </div>
-                        <div class="flex gap-4 mb-8">
-                            <label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border"><input type="checkbox" id="l-locked" class="w-6 h-6 accent-yellow-500"> <span class="font-black text-sm text-yellow-900"><i class="fas fa-crown"></i> VIP</span></label>
-                            <label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border"><input type="checkbox" id="l-hidden" class="w-6 h-6 accent-red-500"> <span class="font-black text-sm text-red-900"><i class="fas fa-eye-slash"></i> إخفاء</span></label>
                         </div>
                         <button id="l-save-btn" onclick="admin.saveLesson()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-indigo-700"><i class="fas fa-paper-plane ml-2"></i> حفظ الدرس</button>
                     </div>
@@ -277,7 +272,7 @@
 
                 <!-- FILES MANAGEMENT -->
                 <div id="tab-files-mgmt" class="adm-tab space-y-8">
-                    <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-book text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">الكتب والمذكرات</h3><p class="font-bold opacity-90">أضف روابط الكتب والملفات مع تصنيفها</p></div></div>
+                    <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-book text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">الكتب والمذكرات</h3></div></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
                         <h4 class="font-black text-xl mb-6" id="file-form-title">إضافة ملف جديد</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><input id="file-title" placeholder="عنوان الملف" class="border-2 p-4 rounded-xl font-black bg-slate-50"><input id="file-url" placeholder="رابط الملف" class="border-2 p-4 rounded-xl text-left bg-slate-50" dir="ltr"></div>
@@ -289,12 +284,8 @@
 
                 <!-- CUSTOM SUBJECTS -->
                 <div id="tab-subjects-mgmt" class="adm-tab space-y-8">
-                    <div class="bg-gradient-to-r from-fuchsia-500 to-purple-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-th-large text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">المواد المخصصة</h3><p class="font-bold opacity-90">أضف مواد إضافية تظهر في المراحل</p></div></div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
-                        <h4 class="font-black text-xl mb-6">إضافة مادة جديدة</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><select id="custom-stage" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select><input id="custom-name" placeholder="اسم المادة" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><input id="custom-icon" placeholder="أيقونة (fa-star)" class="border-2 p-4 rounded-xl font-bold bg-slate-50" value="fa-star"></div>
-                        <button onclick="admin.addCustomSubject()" class="w-full bg-fuchsia-600 text-white py-4 rounded-2xl font-black"><i class="fas fa-plus ml-2"></i> إضافة المادة</button>
-                    </div>
+                    <div class="bg-gradient-to-r from-fuchsia-500 to-purple-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-th-large text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">المواد المخصصة</h3></div></div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">إضافة مادة جديدة</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><select id="custom-stage" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select><input id="custom-name" placeholder="اسم المادة" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><input id="custom-icon" placeholder="أيقونة (fa-star)" class="border-2 p-4 rounded-xl font-bold bg-slate-50" value="fa-star"></div><button onclick="admin.addCustomSubject()" class="w-full bg-fuchsia-600 text-white py-4 rounded-2xl font-black"><i class="fas fa-plus ml-2"></i> إضافة المادة</button></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">المواد المضافة</h4><div id="custom-subjects-list" class="space-y-3 stagger-animation"></div></div>
                 </div>
 
@@ -465,104 +456,13 @@
                 });
             },
 
-            // إضافة كتلة شرح جديدة
-            addContentBlock: () => {
-                const container = document.getElementById('contents-container');
-                const div = document.createElement('div');
-                div.className = 'content-block';
-                div.innerHTML = `
-                    <input placeholder="عنوان الشرح" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="">
-                    <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white"></textarea>
-                    <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
-                `;
-                container.appendChild(div);
-            },
-
-            toggleQuestionTypeFields: (prefix) => {
-                const type = document.getElementById(`${prefix}-q-type`).value;
-                document.getElementById(`${prefix}-mcq-fields`).classList.toggle('hidden', type !== 'mcq');
-                document.getElementById(`${prefix}-ordering-fields`).classList.toggle('hidden', type !== 'ordering');
-            },
-
-            updateHierarchy: (prefix) => {
-                const stage = document.getElementById(`${prefix}-stage`).value;
-                const gradeSelect = document.getElementById(`${prefix}-grade`);
-                const subjectSelect = document.getElementById(`${prefix}-subject`);
-                let gradeHtml = stage === 'primary' ? '<option value="4">الصف الرابع</option><option value="5">الخامس</option><option value="6">السادس</option>' :
-                           stage === 'prep' ? '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>' :
-                           '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>';
-                gradeSelect.innerHTML = gradeHtml;
-                if(subjectSelect) {
-                    const subs = subjectMapping[stage] || [];
-                    subjectSelect.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-                }
-            },
-
-            fetchModels: async () => {
-                const key = document.getElementById('set-api-key').value; if(!key) return alert('ضع مفتاح API');
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-                    const data = await res.json();
-                    const valid = data.models.filter(m => m.supportedGenerationMethods?.includes("generateContent"));
-                    document.getElementById('set-ai-model').innerHTML = valid.map(m => `<option value="${m.name.replace('models/', '')}">${m.name.replace('models/', '')}</option>`).join('');
-                    app.notify("تم جلب النماذج");
-                } catch(e) { alert(e.message); }
-            },
-
-            saveSettings: () => { 
-                database.ref('settings').update({ 
-                    siteName: document.getElementById('set-site-name').value, 
-                    whatsapp: document.getElementById('set-whatsapp').value, 
-                    siteLogo: document.getElementById('set-site-logo').value,
-                    apiKey: document.getElementById('set-api-key').value, 
-                    aiModel: document.getElementById('set-ai-model').value,
-                    aboutText: document.getElementById('set-about').value,
-                    termsText: document.getElementById('set-terms').value,
-                    privacyText: document.getElementById('set-privacy').value,
-                    socialLinks: {
-                        facebook: document.getElementById('set-fb').value,
-                        youtube: document.getElementById('set-yt').value,
-                        whatsapp: document.getElementById('set-wa').value
-                    }
-                }).then(()=>app.notify("تم حفظ الإعدادات")); 
-            },
-
-            updateVisHierarchy: () => {
-                const stage = document.getElementById('vis-stage').value;
-                const gradeSelect = document.getElementById('vis-grade');
-                const subjectSelect = document.getElementById('vis-subject');
-                let gradeHtml = stage === 'primary' ? '<option value="4">الرابع</option><option value="5">الخامس</option><option value="6">السادس</option>' :
-                           stage === 'prep' ? '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>' :
-                           '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>';
-                gradeSelect.innerHTML = gradeHtml;
-                const subs = subjectMapping[stage] || [];
-                subjectSelect.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            },
-            toggleVisibility: (level) => {
-                const type = document.getElementById('vis-type').value, stage = document.getElementById('vis-stage').value, grade = document.getElementById('vis-grade').value, subject = document.getElementById('vis-subject').value;
-                let key = "";
-                if(level==='type') key = `type_${type}`;
-                else if(level==='stage') key = `stage_${type}_${stage}`;
-                else if(level==='grade') key = `grade_${type}_${stage}_${grade}`;
-                else if(level==='subject') key = `subject_${type}_${stage}_${grade}_${subject}`;
-                const cur = (admin.dbData.settings?.visibility && admin.dbData.settings.visibility[key] === false) ? false : true;
-                database.ref(`settings/visibility/${key}`).set(!cur).then(()=>app.notify(!cur?"تم الإظهار":"تم الإخفاء"));
-            },
-            renderHiddenList: () => {
-                const vis = admin.dbData.settings?.visibility || {};
-                const hiddenKeys = Object.keys(vis).filter(k => vis[k] === false);
-                const list = document.getElementById('hidden-items-list');
-                if(!hiddenKeys.length) { list.innerHTML = '<p class="text-slate-400 font-bold p-4 bg-slate-50 rounded-xl text-center">لا يوجد عناصر مخفية</p>'; return; }
-                list.innerHTML = hiddenKeys.map(k => `<div class="bg-red-50 p-4 rounded-xl flex justify-between"><span class="font-black text-red-900 text-sm">${k}</span><button onclick="database.ref('settings/visibility/${k}').set(true)" class="bg-white text-emerald-600 px-3 py-1 rounded-lg font-bold text-xs">إظهار</button></div>`).join('');
-            },
-
+            // ------ AI Generation ------
             generateAILesson: async () => {
-                const topic = document.getElementById('l-title').value; if(!topic) return app.notify("اكتب العنوان أولاً", "error");
+                const topic = document.getElementById('l-title').value; if(!topic) return app.notify("اكتب عنوان الدرس أولاً", "error");
                 const btn = document.getElementById('btn-ai-lesson'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...'; btn.disabled = true;
                 try {
-                    const prompt = `اكتب شرحاً تعليمياً مفصلاً حول: ${topic}. استخدم التنسيق التالي: # للعناوين الرئيسية، ## للعناوين الفرعية، ** للنص المهم، :::info للتنبيهات، :::warning للتحذيرات، - للقوائم، > للاقتباسات.`;
-                    const text = await aiHelper.generate(prompt);
-                    document.querySelector('#contents-container .content-text').value = text;
+                    const prompt = `اكتب شرحاً تعليمياً مفصلاً حول: ${topic}. استخدم التنسيق التالي: # للعناوين، ## للعناوين الفرعية، ** لنص مهم، :::info للتنبيهات، :::warning للتحذيرات، - للقوائم، > للاقتباسات. أضف أمثلة وصوراً إن أمكن باستخدام ![وصف](رابط).`;
+                    document.getElementById('l-content').value = await aiHelper.generate(prompt);
                     app.notify("تم التوليد");
                 } catch(e) { alert(e.message); }
                 btn.innerHTML = '<i class="fas fa-magic"></i> توليد AI'; btn.disabled = false;
@@ -578,27 +478,17 @@
                 btn.innerHTML = '<i class="fas fa-robot"></i> توليد'; btn.disabled = false;
             },
 
+            // ------ Lessons ------
             addVideoToTemp: () => {
                 const name = document.getElementById('v-teacher').value.trim(), url = document.getElementById('v-url').value.trim();
                 if(name && url) { admin.tempVideos.push({ name, url }); admin.renderTempVideos(); document.getElementById('v-teacher').value = ''; document.getElementById('v-url').value = ''; }
             },
             renderTempVideos: () => { document.getElementById('temp-videos-list').innerHTML = admin.tempVideos.map((v,i) => `<div class="bg-white p-3 rounded-xl flex justify-between text-sm"><span><i class="fas fa-video ml-2"></i>${v.name}</span><button onclick="admin.tempVideos.splice(${i},1);admin.renderTempVideos()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join(''); },
-
             saveLesson: () => {
-                const title = document.getElementById('l-title').value;
+                const title = document.getElementById('l-title').value, content = document.getElementById('l-content').value;
                 if(!title) return app.notify("العنوان مطلوب", "error");
-                // جمع الشروحات من الحقول
-                const contents = [];
-                document.querySelectorAll('#contents-container .content-block').forEach(block => {
-                    const titleEl = block.querySelector('.content-title');
-                    const textEl = block.querySelector('.content-text');
-                    if (titleEl && textEl) {
-                        contents.push({ title: titleEl.value || 'شرح', content: textEl.value });
-                    }
-                });
                 const payload = {
-                    title,
-                    contents: contents.length > 0 ? contents : [{ title: 'الشرح', content: '' }],
+                    title, content,
                     type: document.getElementById('l-type').value,
                     stage: document.getElementById('l-stage').value,
                     grade: document.getElementById('l-grade').value,
@@ -621,36 +511,11 @@
                 setTimeout(() => { document.getElementById('l-grade').value = l.grade; document.getElementById('l-subject').value = l.subject; }, 100);
                 document.getElementById('l-unit').value = l.unit || 1;
                 document.getElementById('l-title').value = l.title;
+                document.getElementById('l-content').value = l.content || '';
                 document.getElementById('l-locked').checked = l.isLocked || false;
                 document.getElementById('l-hidden').checked = l.isHidden || false;
-                admin.tempVideos = l.videos || [];
-                admin.renderTempVideos();
-                admin.tempLessonQuestions = l.questions || [];
-                admin.renderTempQuestions('l');
-                // ملء الشروحات
-                const container = document.getElementById('contents-container');
-                container.innerHTML = '';
-                if (l.contents && Array.isArray(l.contents)) {
-                    l.contents.forEach(c => {
-                        const div = document.createElement('div');
-                        div.className = 'content-block';
-                        div.innerHTML = `
-                            <input placeholder="عنوان الشرح" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="${c.title || ''}">
-                            <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white">${c.content || ''}</textarea>
-                            <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
-                        `;
-                        container.appendChild(div);
-                    });
-                } else if (l.content) {
-                    const div = document.createElement('div');
-                    div.className = 'content-block';
-                    div.innerHTML = `
-                        <input placeholder="عنوان الشرح" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="الشرح">
-                        <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white">${l.content}</textarea>
-                        <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
-                    `;
-                    container.appendChild(div);
-                }
+                admin.tempVideos = l.videos || []; admin.renderTempVideos();
+                admin.tempLessonQuestions = l.questions || []; admin.renderTempQuestions('l');
                 document.getElementById('l-form-title').innerText = "تعديل: " + l.title;
                 document.getElementById('l-save-btn').innerHTML = "<i class='fas fa-save ml-2'></i> حفظ التحديثات";
                 window.scrollTo({top: 0, behavior: 'smooth'});
@@ -658,19 +523,11 @@
             resetLessonForm: () => {
                 admin.editLessonId = null;
                 document.getElementById('l-title').value = '';
+                document.getElementById('l-content').value = '';
                 document.getElementById('l-locked').checked = false;
                 document.getElementById('l-hidden').checked = false;
-                admin.tempVideos = [];
-                admin.tempLessonQuestions = [];
-                admin.renderTempVideos();
-                admin.renderTempQuestions('l');
-                document.getElementById('contents-container').innerHTML = `
-                    <div class="content-block">
-                        <input placeholder="عنوان الشرح" class="content-title w-full border-2 border-slate-200 p-3 rounded-xl font-bold mb-2 bg-white" value="الشرح الأساسي">
-                        <textarea placeholder="محتوى الشرح..." class="content-text w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none focus:border-indigo-500 bg-white"></textarea>
-                        <button onclick="this.parentElement.remove()" class="text-red-500 text-sm mt-2"><i class="fas fa-trash"></i> حذف</button>
-                    </div>
-                `;
+                admin.tempVideos = []; admin.tempLessonQuestions = [];
+                admin.renderTempVideos(); admin.renderTempQuestions('l');
                 document.getElementById('l-form-title').innerText = "إضافة درس جديد";
                 document.getElementById('l-save-btn').innerHTML = "<i class='fas fa-paper-plane ml-2'></i> حفظ الدرس";
             },
@@ -683,6 +540,12 @@
                     </div>`).join('');
             },
 
+            // ------ Questions (shared for lessons and quizzes) ------
+            toggleQuestionTypeFields: (prefix) => {
+                const type = document.getElementById(`${prefix}-q-type`).value;
+                document.getElementById(`${prefix}-mcq-fields`).classList.toggle('hidden', type !== 'mcq');
+                document.getElementById(`${prefix}-ordering-fields`).classList.toggle('hidden', type !== 'ordering');
+            },
             addQuestionToTemp: (prefix) => {
                 const type = document.getElementById(`${prefix}-q-type`).value;
                 const text = document.getElementById(`${prefix}-q-text`).value;
@@ -719,6 +582,7 @@
                 `).join('');
             },
 
+            // ------ Quizzes ------
             saveQuiz: () => {
                 const name = document.getElementById('q-title').value; if(!name||!admin.tempQuizQuestions.length) return app.notify("الاسم والأسئلة مطلوبان", "error");
                 const payload = { name, type: document.getElementById('q-type').value, stage: document.getElementById('q-stage').value, grade: document.getElementById('q-grade').value, subject: document.getElementById('q-subject').value, unit: document.getElementById('q-unit').value, questions: admin.tempQuizQuestions, isLocked: document.getElementById('q-locked').checked, isHidden: document.getElementById('q-hidden').checked };
@@ -751,6 +615,7 @@
                     </div>`).join('');
             },
 
+            // ------ Simulations ------
             saveSimulation: () => {
                 const name = document.getElementById('sim-name').value; if(!name) return app.notify("الاسم مطلوب", "error");
                 const payload = { name, type: document.getElementById('sim-type').value, stage: document.getElementById('sim-stage').value, grade: document.getElementById('sim-grade').value, time: document.getElementById('sim-time').value, counts: { ar: document.getElementById('sim-ar').value, ma: document.getElementById('sim-ma').value, sc: document.getElementById('sim-sc').value, en: document.getElementById('sim-en').value }, isLocked: document.getElementById('sim-locked').checked, isHidden: document.getElementById('sim-hidden').checked };
@@ -779,57 +644,32 @@
                     </div>`).join('');
             },
 
-            // إدارة الملفات
+            // ------ Files ------
             saveFile: () => {
                 const title = document.getElementById('file-title').value, url = document.getElementById('file-url').value;
                 if(!title||!url) return app.notify("العنوان والرابط مطلوبان", "error");
-                const payload = {
-                    title, url,
-                    type: document.getElementById('file-type').value,
-                    stage: document.getElementById('file-stage').value,
-                    grade: document.getElementById('file-grade').value,
-                    subject: document.getElementById('file-subject').value,
-                    icon: 'fa-file-pdf',
-                    createdAt: Date.now()
-                };
+                const payload = { title, url, type: document.getElementById('file-type').value, stage: document.getElementById('file-stage').value, grade: document.getElementById('file-grade').value, subject: document.getElementById('file-subject').value, icon: 'fa-file-pdf', createdAt: Date.now() };
                 if(admin.editFileId) { database.ref('files/'+admin.editFileId).set(payload).then(()=>{app.notify("تم التحديث");admin.resetFileForm();}); }
                 else { database.ref('files').push(payload).then(()=>{app.notify("تم الحفظ");admin.resetFileForm();}); }
             },
             editFile: (id) => {
                 const f = admin.dbData.files[id]; if(!f) return;
                 admin.editFileId = id;
-                document.getElementById('file-title').value = f.title;
-                document.getElementById('file-url').value = f.url;
-                document.getElementById('file-type').value = f.type;
-                document.getElementById('file-stage').value = f.stage;
-                document.getElementById('file-grade').value = f.grade;
-                document.getElementById('file-subject').value = f.subject || '';
-                document.getElementById('file-form-title').innerText = "تعديل ملف";
-                document.getElementById('file-save-btn').innerText = "تحديث الملف";
+                document.getElementById('file-title').value = f.title; document.getElementById('file-url').value = f.url; document.getElementById('file-type').value = f.type; document.getElementById('file-stage').value = f.stage; document.getElementById('file-grade').value = f.grade; document.getElementById('file-subject').value = f.subject || '';
+                document.getElementById('file-form-title').innerText = "تعديل ملف"; document.getElementById('file-save-btn').innerText = "تحديث الملف";
                 window.scrollTo({top:0});
             },
-            resetFileForm: () => {
-                admin.editFileId = null;
-                document.getElementById('file-title').value = '';
-                document.getElementById('file-url').value = '';
-                document.getElementById('file-subject').value = '';
-                document.getElementById('file-form-title').innerText = "إضافة ملف جديد";
-                document.getElementById('file-save-btn').innerText = "حفظ الملف";
-            },
+            resetFileForm: () => { admin.editFileId = null; document.getElementById('file-title').value = ''; document.getElementById('file-url').value = ''; document.getElementById('file-subject').value = ''; document.getElementById('file-form-title').innerText = "إضافة ملف جديد"; document.getElementById('file-save-btn').innerText = "حفظ الملف"; },
             renderFilesMgmt: () => {
                 const files = Object.entries(admin.dbData.files || {}).reverse();
                 document.getElementById('files-mgmt-list').innerHTML = files.length ? files.map(([id, f]) => `
                     <div class="bg-white p-5 rounded-2xl border flex justify-between items-center shadow-sm">
                         <div><h5 class="font-black text-slate-800">${f.title}</h5><p class="text-xs text-slate-400">${f.type} - ${f.stage} - صف ${f.grade} ${f.subject?'- '+f.subject:''}</p></div>
-                        <div class="flex gap-2">
-                            <button onclick="admin.editFile('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs"><i class="fas fa-pen"></i></button>
-                            <button onclick="if(confirm('حذف الملف؟')) database.ref('files/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `).join('') : '<p class="text-slate-400 text-center py-8">لا توجد ملفات</p>';
+                        <div class="flex gap-2"><button onclick="admin.editFile('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف الملف؟')) database.ref('files/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs"><i class="fas fa-trash"></i></button></div>
+                    </div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد ملفات</p>';
             },
 
-            // المواد المخصصة
+            // ------ Custom Subjects ------
             addCustomSubject: () => {
                 const stage = document.getElementById('custom-stage').value;
                 const name = document.getElementById('custom-name').value.trim();
@@ -852,9 +692,7 @@
                 let html = '';
                 for(const [stage, subs] of Object.entries(all)) {
                     html += `<h5 class="font-black text-indigo-600 mt-4">${stage==='primary'?'ابتدائي':stage==='prep'?'إعدادي':'ثانوي'}</h5>`;
-                    subs.forEach((s, i) => {
-                        html += `<div class="bg-white p-4 rounded-2xl border flex justify-between items-center"><span><i class="fas ${s.icon} ml-2"></i> ${s.name}</span><button onclick="admin.removeCustomSubject('${stage}', ${i})" class="text-red-500"><i class="fas fa-trash"></i></button></div>`;
-                    });
+                    subs.forEach((s, i) => { html += `<div class="bg-white p-4 rounded-2xl border flex justify-between items-center"><span><i class="fas ${s.icon} ml-2"></i> ${s.name}</span><button onclick="admin.removeCustomSubject('${stage}', ${i})" class="text-red-500"><i class="fas fa-trash"></i></button></div>`; });
                 }
                 container.innerHTML = html || '<p class="text-slate-400 text-center py-8">لا توجد مواد مخصصة</p>';
             },
@@ -866,14 +704,14 @@
                 });
             },
 
-            // المتصدرين
+            // ------ Leaderboard ------
             resetLeaderboard: (period) => { if(confirm('مسح '+period+'؟')) database.ref('leaderboard/'+period).set({}).then(()=>app.notify("تم المسح")); },
             renderLeaderboardMgmt: () => {
                 const profiles = Object.entries(admin.dbData.studentProfiles||{}).sort((a,b)=>(b[1].totalXP||0)-(a[1].totalXP||0));
                 document.getElementById('students-profiles-list').innerHTML = profiles.length ? profiles.map(([name,data],i)=>`<div class="bg-white p-5 rounded-2xl border flex justify-between"><div><span class="text-2xl font-black ml-4">${i+1}</span>${name} - مستوى ${data.level||1} | ${data.totalXP||0} XP</div><button onclick="if(confirm('حذف؟')) database.ref('studentProfiles/${name}').remove()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد بيانات</p>';
             },
 
-            // البث المباشر
+            // ------ Live Sessions ------
             saveLiveSession: () => {
                 const title = document.getElementById('session-title').value; if(!title) return app.notify("العنوان مطلوب","error");
                 const payload = { title, teacher: document.getElementById('session-teacher').value||'غير محدد', status: document.getElementById('session-status').value, scheduledTime: document.getElementById('session-time').value?new Date(document.getElementById('session-time').value).getTime():Date.now(), duration: parseInt(document.getElementById('session-duration').value)||60, youtubeLiveUrl: document.getElementById('session-youtube').value, zoomLink: document.getElementById('session-zoom').value };
@@ -885,22 +723,20 @@
                 admin.editSessionId = id;
                 document.getElementById('session-title').value = s.title; document.getElementById('session-teacher').value = s.teacher; document.getElementById('session-status').value = s.status; document.getElementById('session-duration').value = s.duration; document.getElementById('session-youtube').value = s.youtubeLiveUrl||''; document.getElementById('session-zoom').value = s.zoomLink||'';
                 if(s.scheduledTime) document.getElementById('session-time').value = new Date(s.scheduledTime).toISOString().slice(0,16);
-                document.getElementById('session-form-title').innerText = "تعديل: "+s.title;
-                document.getElementById('session-save-btn').innerText = "تحديث";
+                document.getElementById('session-form-title').innerText = "تعديل: "+s.title; document.getElementById('session-save-btn').innerText = "تحديث";
                 window.scrollTo({top:0});
             },
             resetSessionForm: () => {
                 admin.editSessionId = null;
                 document.getElementById('session-title').value = ''; document.getElementById('session-teacher').value = ''; document.getElementById('session-status').value = 'upcoming'; document.getElementById('session-time').value = ''; document.getElementById('session-duration').value = '60'; document.getElementById('session-youtube').value = ''; document.getElementById('session-zoom').value = '';
-                document.getElementById('session-form-title').innerText = "إضافة جلسة";
-                document.getElementById('session-save-btn').innerText = "حفظ الجلسة";
+                document.getElementById('session-form-title').innerText = "إضافة جلسة"; document.getElementById('session-save-btn').innerText = "حفظ الجلسة";
             },
             renderLiveSessionsMgmt: () => {
                 const sessions = Object.entries(admin.dbData.liveSessions||{}).reverse();
                 document.getElementById('sessions-mgmt-list').innerHTML = sessions.length ? sessions.map(([id,s])=>`<div class="bg-white p-5 rounded-2xl border"><div class="flex justify-between"><h5 class="font-black">${s.title}</h5><span class="text-xs font-black px-3 py-1 rounded-full ${s.status==='live'?'bg-red-100 text-red-600':s.status==='upcoming'?'bg-blue-100 text-blue-600':'bg-slate-100'}">${s.status==='live'?'🔴 مباشر':s.status==='upcoming'?'📅 قادم':'✅ منتهي'}</span></div><div class="flex gap-2 mt-3"><button onclick="admin.editLiveSession('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف؟')) database.ref('liveSessions/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs"><i class="fas fa-trash"></i></button></div></div>`).join('') : '<p class="col-span-2 text-center py-8 text-slate-400">لا توجد جلسات</p>';
             },
 
-            // المجتمع
+            // ------ Community ------
             renderCommunityMgmt: () => {
                 const forums = Object.entries(admin.dbData.community?.forums||{}).reverse();
                 document.getElementById('forums-mgmt-list').innerHTML = forums.length ? forums.map(([id,post])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between"><div><h5 class="font-black">${post.title}</h5><p class="text-xs">${post.author} | ❤️ ${post.likes||0}</p></div><button onclick="if(confirm('حذف؟')) database.ref('community/forums/${id}').remove()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد منشورات</p>';
@@ -912,7 +748,7 @@
                 database.ref('community/studyGroups').push({name, members:[], createdBy:'admin', createdAt:Date.now()}).then(()=>app.notify("تم الإنشاء"));
             },
 
-            // الطلاب والأخبار والإعلانات
+            // ------ Users, Posts, Announcements ------
             addUser: () => { 
                 const u = document.getElementById('new-user-name').value, p = document.getElementById('new-user-pass').value, d = document.getElementById('new-user-duration').value; 
                 if(!u||!p) return app.notify("أكمل البيانات","error"); 
@@ -937,7 +773,80 @@
                 const p = Object.entries(admin.dbData.posts||{}).reverse(); 
                 document.getElementById('posts-list-display').innerHTML = p.map(([id,val])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between group"><div><b>${val.title}</b></div><button onclick="if(confirm('حذف؟')) database.ref('posts/${id}').remove()" class="text-red-500 opacity-0 group-hover:opacity-100"><i class="fas fa-trash"></i></button></div>`).join(''); 
             },
-            saveAnnouncement: () => { database.ref('announcements').set({text:document.getElementById('ann-text').value,isActive:document.getElementById('ann-active').checked,expiry:Date.now()+(document.getElementById('ann-expiry').value*86400000)}).then(()=>app.notify("تم الحفظ")); }
+            saveAnnouncement: () => { database.ref('announcements').set({text:document.getElementById('ann-text').value,isActive:document.getElementById('ann-active').checked,expiry:Date.now()+(document.getElementById('ann-expiry').value*86400000)}).then(()=>app.notify("تم الحفظ")); },
+
+            // ------ Visibility ------
+            updateVisHierarchy: () => {
+                const stage = document.getElementById('vis-stage').value;
+                const gradeSelect = document.getElementById('vis-grade');
+                const subjectSelect = document.getElementById('vis-subject');
+                let gradeHtml = stage === 'primary' ? '<option value="4">الرابع</option><option value="5">الخامس</option><option value="6">السادس</option>' :
+                           stage === 'prep' ? '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>' :
+                           '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>';
+                gradeSelect.innerHTML = gradeHtml;
+                const subs = subjectMapping[stage] || [];
+                subjectSelect.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            },
+            toggleVisibility: (level) => {
+                const type = document.getElementById('vis-type').value, stage = document.getElementById('vis-stage').value, grade = document.getElementById('vis-grade').value, subject = document.getElementById('vis-subject').value;
+                let key = "";
+                if(level==='type') key = `type_${type}`;
+                else if(level==='stage') key = `stage_${type}_${stage}`;
+                else if(level==='grade') key = `grade_${type}_${stage}_${grade}`;
+                else if(level==='subject') key = `subject_${type}_${stage}_${grade}_${subject}`;
+                const cur = (admin.dbData.settings?.visibility && admin.dbData.settings.visibility[key] === false) ? false : true;
+                database.ref(`settings/visibility/${key}`).set(!cur).then(()=>app.notify(!cur?"تم الإظهار":"تم الإخفاء"));
+            },
+            renderHiddenList: () => {
+                const vis = admin.dbData.settings?.visibility || {};
+                const hiddenKeys = Object.keys(vis).filter(k => vis[k] === false);
+                const list = document.getElementById('hidden-items-list');
+                if(!hiddenKeys.length) { list.innerHTML = '<p class="text-slate-400 font-bold p-4 bg-slate-50 rounded-xl text-center">لا يوجد عناصر مخفية</p>'; return; }
+                list.innerHTML = hiddenKeys.map(k => `<div class="bg-red-50 p-4 rounded-xl flex justify-between"><span class="font-black text-red-900 text-sm">${k}</span><button onclick="database.ref('settings/visibility/${k}').set(true)" class="bg-white text-emerald-600 px-3 py-1 rounded-lg font-bold text-xs">إظهار</button></div>`).join('');
+            },
+
+            // ------ Settings ------
+            fetchModels: async () => {
+                const key = document.getElementById('set-api-key').value; if(!key) return alert('ضع مفتاح API');
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                    const data = await res.json();
+                    const valid = data.models.filter(m => m.supportedGenerationMethods?.includes("generateContent"));
+                    document.getElementById('set-ai-model').innerHTML = valid.map(m => `<option value="${m.name.replace('models/', '')}">${m.name.replace('models/', '')}</option>`).join('');
+                    app.notify("تم جلب النماذج");
+                } catch(e) { alert(e.message); }
+            },
+            saveSettings: () => { 
+                database.ref('settings').update({ 
+                    siteName: document.getElementById('set-site-name').value, 
+                    whatsapp: document.getElementById('set-whatsapp').value, 
+                    siteLogo: document.getElementById('set-site-logo').value,
+                    apiKey: document.getElementById('set-api-key').value, 
+                    aiModel: document.getElementById('set-ai-model').value,
+                    aboutText: document.getElementById('set-about').value,
+                    termsText: document.getElementById('set-terms').value,
+                    privacyText: document.getElementById('set-privacy').value,
+                    socialLinks: {
+                        facebook: document.getElementById('set-fb').value,
+                        youtube: document.getElementById('set-yt').value,
+                        whatsapp: document.getElementById('set-wa').value
+                    }
+                }).then(()=>app.notify("تم حفظ الإعدادات")); 
+            },
+
+            updateHierarchy: (prefix) => {
+                const stage = document.getElementById(`${prefix}-stage`).value;
+                const gradeSelect = document.getElementById(`${prefix}-grade`);
+                const subjectSelect = document.getElementById(`${prefix}-subject`);
+                let gradeHtml = stage === 'primary' ? '<option value="4">الصف الرابع</option><option value="5">الخامس</option><option value="6">السادس</option>' :
+                           stage === 'prep' ? '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>' :
+                           '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>';
+                gradeSelect.innerHTML = gradeHtml;
+                if(subjectSelect) {
+                    const subs = subjectMapping[stage] || [];
+                    subjectSelect.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                }
+            }
         };
 
         admin.init();
