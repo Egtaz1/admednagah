@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>لوحة الإدارة | نظام إدارة التعلم المتقدم</title> 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script> 
-    <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Cairo', 'sans-serif'] }, colors: { admin: '#0f172a', primary: '#2563eb', accent: '#10b981' } } } }</script> 
+    <script>
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] }, 
+                    colors: { admin: '#0f172a', primary: '#2563eb', accent: '#10b981' } 
+                } 
+            } 
+        }
+    </script> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet"> 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script> 
@@ -14,28 +23,65 @@
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; overflow-x: hidden; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .adm-tab { display: none; animation: fadeIn 0.4s ease-in-out; }
         .adm-tab.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; }
-        @media (max-width: 768px) { .sidebar { transform: translateX(100%); } .sidebar.open { transform: translateX(0); } .main-content { margin-right: 0 !important; } }
-        .side-btn { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-radius: 1rem; color: #94a3b8; font-weight: 700; transition: all 0.2s; margin-bottom: 0.5rem; border: 1px solid transparent; }
+        @media (max-width: 768px) { 
+            .sidebar { transform: translateX(100%); } 
+            .sidebar.open { transform: translateX(0); } 
+            .main-content { margin-right: 0 !important; } 
+        }
+        .side-btn { 
+            display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; 
+            border-radius: 1rem; color: #94a3b8; font-weight: 700; 
+            transition: all 0.2s; margin-bottom: 0.5rem; border: 1px solid transparent; 
+        }
         .side-btn:hover { background-color: #1e293b; color: #f8fafc; border-color: #334155; }
-        .side-btn.active { background-color: #2563eb; color: #ffffff; box-shadow: 0 10px 25px -5px rgba(37,99,235,0.4); border-color: #3b82f6; }
-        .badge-new { background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 900; }
-        .content-block { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 0.5rem; border: 1px solid #e2e8f0; }
+        .side-btn.active { 
+            background-color: #2563eb; color: #ffffff; 
+            box-shadow: 0 10px 25px -5px rgba(37,99,235,0.4); border-color: #3b82f6; 
+        }
+        .tree-item { 
+            position: relative; padding-right: 20px; 
+        }
+        .tree-item::before {
+            content: ''; position: absolute; right: 0; top: 0; 
+            width: 2px; height: 100%; background: #e2e8f0;
+        }
+        .tree-item:last-child::before { height: 50%; }
+        .tree-item::after {
+            content: ''; position: absolute; right: 0; top: 50%;
+            width: 15px; height: 2px; background: #e2e8f0;
+        }
+        .unit-card { transition: all 0.3s ease; }
+        .unit-card:hover { transform: translateX(-4px); }
+        .stagger-animation > * { opacity: 0; animation: fadeInUp 0.5s forwards; }
+        .stagger-animation > *:nth-child(1) { animation-delay: 0.05s; }
+        .stagger-animation > *:nth-child(2) { animation-delay: 0.1s; }
+        .stagger-animation > *:nth-child(3) { animation-delay: 0.15s; }
+        .stagger-animation > *:nth-child(4) { animation-delay: 0.2s; }
+        .stagger-animation > *:nth-child(5) { animation-delay: 0.25s; }
+        .stagger-animation > *:nth-child(6) { animation-delay: 0.3s; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style> 
 </head> 
 <body class="text-slate-800 flex h-screen overflow-hidden"> 
 
+    <!-- Toast Notification -->
     <div id="toast-notification" class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl text-white font-bold min-w-[300px] justify-center transition-all duration-300 transform -translate-y-32"> 
         <i id="toast-icon" class="text-xl"></i> <span id="toast-msg"></span> 
     </div> 
 
+    <!-- Login View -->
     <div id="login-view" class="fixed inset-0 bg-slate-900 z-[99999] flex justify-center items-center p-4"> 
         <div class="bg-white p-10 md:p-14 rounded-[3rem] shadow-2xl w-full max-w-md text-center relative overflow-hidden"> 
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-accent"></div>
-            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border-4 border-slate-100 -mt-4"> <i class="fas fa-shield-alt text-4xl text-admin"></i> </div> 
+            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border-4 border-slate-100 -mt-4"> 
+                <i class="fas fa-shield-alt text-4xl text-admin"></i> 
+            </div> 
             <h2 class="text-3xl font-black mb-2 text-slate-800">إدارة المنصة</h2> 
             <p class="text-slate-500 font-bold mb-8 text-sm">تسجيل الدخول المحمي للمشرفين</p>
             <div class="space-y-4"> 
@@ -46,28 +92,38 @@
         </div> 
     </div> 
 
+    <!-- Main Panel -->
     <div id="panel-view" class="hidden w-full h-full flex bg-slate-100">
+        <!-- Sidebar -->
         <aside id="sidebar" class="sidebar fixed right-0 top-0 h-full w-72 bg-admin text-white shadow-[0_0_40px_rgba(0,0,0,0.1)] flex flex-col overflow-y-auto no-scrollbar">
             <div class="p-8 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-admin/95 backdrop-blur z-10">
-                <h2 class="text-3xl font-black flex items-center gap-3"><i class="fas fa-crown text-yellow-400"></i> لوحة الإدارة</h2>
-                <button onclick="admin.toggleSidebar()" class="md:hidden w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-300 hover:text-white"><i class="fas fa-times"></i></button>
+                <h2 class="text-3xl font-black flex items-center gap-3">
+                    <i class="fas fa-crown text-yellow-400"></i> لوحة الإدارة
+                </h2>
+                <button onclick="admin.toggleSidebar()" class="md:hidden w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-300 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <nav class="flex-1 p-5 overflow-y-auto no-scrollbar">
-                <p class="text-xs font-black text-slate-500 mb-4 px-4">الإعدادات والتحكم</p>
+                <p class="text-xs font-black text-slate-500 mb-4 px-4">⚙️ الإعدادات والتحكم</p>
                 <button onclick="admin.switchTab('settings')" class="side-btn active w-full text-right"><i class="fas fa-cogs w-6 text-center"></i> إعدادات المنصة</button>
                 <button onclick="admin.switchTab('visibility')" class="side-btn w-full text-right"><i class="fas fa-eye w-6 text-center text-emerald-400"></i> شجرة الإخفاء</button>
-                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">المحتوى التعليمي</p>
+                
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">📚 إدارة المواد والمناهج</p>
+                <button onclick="admin.switchTab('subjects-manager')" class="side-btn w-full text-right"><i class="fas fa-th-large w-6 text-center text-fuchsia-400"></i> إدارة المواد والوحدات</button>
                 <button onclick="admin.switchTab('lessons')" class="side-btn w-full text-right"><i class="fas fa-video w-6 text-center text-indigo-400"></i> الدروس والمناهج</button>
                 <button onclick="admin.switchTab('quizzes')" class="side-btn w-full text-right"><i class="fas fa-file-signature w-6 text-center text-blue-400"></i> الاختبارات</button>
                 <button onclick="admin.switchTab('simulations')" class="side-btn w-full text-right"><i class="fas fa-stopwatch w-6 text-center text-yellow-400"></i> المحاكيات</button>
-                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">مكتبة المحتوى</p>
+                
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">📖 مكتبة المحتوى</p>
                 <button onclick="admin.switchTab('files-mgmt')" class="side-btn w-full text-right"><i class="fas fa-book w-6 text-center text-cyan-400"></i> الكتب والملفات</button>
-                <button onclick="admin.switchTab('subjects-mgmt')" class="side-btn w-full text-right"><i class="fas fa-th-large w-6 text-center text-fuchsia-400"></i> المواد المخصصة</button>
-                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">الميزات المتقدمة</p>
+                
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">🚀 الميزات المتقدمة</p>
                 <button onclick="admin.switchTab('leaderboard-mgmt')" class="side-btn w-full text-right"><i class="fas fa-trophy w-6 text-center text-amber-400"></i> المتصدرين</button>
                 <button onclick="admin.switchTab('live-sessions-mgmt')" class="side-btn w-full text-right"><i class="fas fa-broadcast-tower w-6 text-center text-red-400"></i> البث المباشر</button>
                 <button onclick="admin.switchTab('community-mgmt')" class="side-btn w-full text-right"><i class="fas fa-users w-6 text-center text-purple-400"></i> المجتمع</button>
-                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">الطلاب والتواصل</p>
+                
+                <p class="text-xs font-black text-slate-500 mb-4 mt-8 px-4">👥 الطلاب والتواصل</p>
                 <button onclick="admin.switchTab('users')" class="side-btn w-full text-right"><i class="fas fa-users-cog w-6 text-center text-teal-400"></i> الطلاب</button>
                 <button onclick="admin.switchTab('posts')" class="side-btn w-full text-right"><i class="fas fa-newspaper w-6 text-center text-orange-400"></i> الأخبار</button>
                 <button onclick="admin.switchTab('announcements')" class="side-btn w-full text-right"><i class="fas fa-bullhorn w-6 text-center text-rose-400"></i> الإعلانات</button>
@@ -79,23 +135,33 @@
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content flex-1 h-full overflow-y-auto mr-0 md:mr-72 transition-all duration-300 relative">
             <header class="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200 sticky top-0 z-40 p-4 md:px-8 flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <button onclick="admin.toggleSidebar()" class="md:hidden w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600"><i class="fas fa-bars text-xl"></i></button>
+                    <button onclick="admin.toggleSidebar()" class="md:hidden w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
                     <h2 class="font-black text-2xl text-slate-800" id="top-title">إعدادات المنصة</h2>
                 </div>
                 <div class="flex items-center gap-4">
-                    <a href="student.html" target="_blank" class="hidden md:flex bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-2.5 rounded-xl font-black text-sm items-center gap-2 shadow-lg"><i class="fas fa-external-link-alt"></i> فتح لوحة الطالب</a>
-                    <div class="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold"><i class="fas fa-user-shield text-xl"></i></div>
+                    <a href="student.html" target="_blank" class="hidden md:flex bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-2.5 rounded-xl font-black text-sm items-center gap-2 shadow-lg">
+                        <i class="fas fa-external-link-alt"></i> فتح لوحة الطالب
+                    </a>
+                    <div class="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-bold">
+                        <i class="fas fa-user-shield text-xl"></i>
+                    </div>
                 </div>
             </header>
 
             <div class="p-4 md:p-8 max-w-7xl mx-auto pb-24">
-                <!-- SETTINGS TAB -->
+                
+                <!-- ==================== SETTINGS TAB ==================== -->
                 <div id="tab-settings" class="adm-tab active space-y-8">
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
-                        <h3 class="font-black text-2xl mb-6 border-b pb-4"><i class="fas fa-paint-brush text-primary bg-blue-50 p-3 rounded-xl"></i> الهوية والتواصل</h3>
+                        <h3 class="font-black text-2xl mb-6 border-b pb-4">
+                            <i class="fas fa-paint-brush text-primary bg-blue-50 p-3 rounded-xl"></i> الهوية والتواصل
+                        </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">اسم المنصة</label><input id="set-site-name" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-primary bg-slate-50"></div>
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">واتساب (للتواصل)</label><input id="set-whatsapp" placeholder="201xxxxxxxxx" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-primary bg-slate-50" dir="ltr"></div>
@@ -108,6 +174,7 @@
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">واتساب (للأزرار)</label><input id="set-wa" placeholder="201xxxxxxxxx" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold text-left outline-none focus:border-emerald-500 bg-slate-50" dir="ltr"></div>
                         </div>
                     </div>
+                    
                     <div class="bg-indigo-50 p-8 rounded-[2rem] border border-indigo-100 shadow-sm">
                         <h3 class="font-black text-2xl mb-6 text-indigo-900 border-b pb-4"><i class="fas fa-robot text-indigo-500 bg-white p-3 rounded-xl shadow-sm"></i> الذكاء الاصطناعي</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -115,6 +182,7 @@
                             <div><label class="font-bold text-sm text-indigo-700 mb-2 block">النموذج</label><select id="set-ai-model" class="w-full border-2 border-indigo-200 p-4 rounded-xl font-bold outline-none bg-white" dir="ltr"><option value="">-- اضغط فحص --</option></select></div>
                         </div>
                     </div>
+                    
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
                         <h3 class="font-black text-2xl mb-6 border-b pb-4"><i class="fas fa-file-contract text-emerald-500 bg-emerald-50 p-3 rounded-xl"></i> الصفحات الثابتة</h3>
                         <div class="space-y-6">
@@ -123,12 +191,13 @@
                             <div><label class="font-bold text-sm text-slate-500 mb-2 block">الخصوصية</label><textarea id="set-privacy" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-32 outline-none bg-slate-50"></textarea></div>
                         </div>
                     </div>
+                    
                     <div class="sticky bottom-6 z-40 bg-white/90 backdrop-blur-md p-4 rounded-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] border">
                         <button onclick="admin.saveSettings()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-black transition-transform hover:-translate-y-1 text-xl"><i class="fas fa-save ml-2"></i> حفظ جميع الإعدادات</button>
                     </div>
                 </div>
 
-                <!-- VISIBILITY TAB -->
+                <!-- ==================== VISIBILITY TAB ==================== -->
                 <div id="tab-visibility" class="adm-tab space-y-8">
                     <div class="bg-gradient-to-r from-rose-500 to-orange-500 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6">
                         <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center shrink-0"><i class="fas fa-eye-slash text-4xl"></i></div>
@@ -154,13 +223,59 @@
                     </div>
                 </div>
 
-                <!-- LESSONS TAB -->
+                <!-- ==================== SUBJECTS MANAGER TAB ==================== -->
+                <div id="tab-subjects-manager" class="adm-tab space-y-8">
+                    <div class="bg-gradient-to-r from-fuchsia-500 to-purple-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6">
+                        <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-th-large text-4xl"></i></div>
+                        <div><h3 class="text-3xl font-black mb-2">إدارة المواد والوحدات</h3><p class="font-bold opacity-90">إنشاء مواد جديدة مع وحداتها ودروسها واختباراتها</p></div>
+                    </div>
+                    
+                    <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-fuchsia-500">
+                        <div class="flex justify-between items-center mb-8 border-b pb-4">
+                            <h3 class="font-black text-2xl text-fuchsia-900">إضافة مادة جديدة</h3>
+                            <button onclick="admin.resetSubjectForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold"><i class="fas fa-redo"></i> إفراغ</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div><label class="text-xs font-bold text-slate-500 mb-2 block">نوع التعليم *</label><select id="sub-type" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-fuchsia-500 bg-slate-50"><option value="">-- اختر --</option><option value="public">تربية وتعليم</option><option value="azhar">أزهر</option></select></div>
+                            <div><label class="text-xs font-bold text-slate-500 mb-2 block">المرحلة الدراسية *</label><select id="sub-stage" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-fuchsia-500 bg-slate-50" onchange="admin.onSubjectStageChange()"><option value="">-- اختر --</option><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select></div>
+                            <div><label class="text-xs font-bold text-slate-500 mb-2 block">الصف الدراسي *</label><select id="sub-grade" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-fuchsia-500 bg-slate-50"><option value="">-- اختر المرحلة أولاً --</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div><label class="text-xs font-bold text-slate-500 mb-2 block">اسم المادة *</label><input id="sub-name" placeholder="مثال: فلسفة ومنطق" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-fuchsia-500 bg-slate-50"></div>
+                            <div><label class="text-xs font-bold text-slate-500 mb-2 block">أيقونة المادة</label><div class="flex gap-2"><input id="sub-icon" placeholder="fa-brain" value="fa-star" class="flex-1 border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-fuchsia-500 bg-slate-50"><div class="w-14 h-14 bg-fuchsia-100 rounded-xl flex items-center justify-center text-fuchsia-600 text-xl"><i id="sub-icon-preview" class="fas fa-star"></i></div></div></div>
+                        </div>
+                        <div class="mb-6"><label class="text-xs font-bold text-slate-500 mb-2 block">إيموجي المادة</label><input id="sub-emoji" placeholder="⭐" value="📚" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-fuchsia-500 bg-slate-50 max-w-xs"></div>
+                        <div id="sub-validation-error" class="hidden bg-red-50 border border-red-200 p-4 rounded-xl mb-4 text-red-600 font-bold text-sm"></div>
+                        <button onclick="admin.addNewSubject()" class="w-full bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:from-fuchsia-700 hover:to-purple-700 transition-all"><i class="fas fa-plus-circle ml-2"></i> إضافة المادة</button>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border">
+                        <h4 class="font-black text-2xl mb-8 text-slate-800 border-b pb-4"><i class="fas fa-sitemap text-fuchsia-400 ml-2"></i> شجرة المواد والوحدات</h4>
+                        <div id="subjects-tree-container" class="space-y-4 max-h-[800px] overflow-y-auto"><p class="text-slate-400 text-center py-8">جاري التحميل...</p></div>
+                    </div>
+                    
+                    <!-- Unit Management Modal -->
+                    <div id="unit-management-modal" class="hidden fixed inset-0 bg-slate-900/80 z-[9999] flex items-center justify-center p-4">
+                        <div class="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+                            <div class="p-6 border-b flex justify-between items-center bg-gradient-to-r from-fuchsia-50 to-purple-50">
+                                <h3 class="font-black text-xl" id="unit-modal-title">إدارة الوحدة</h3>
+                                <button onclick="admin.closeUnitModal()" class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center hover:bg-red-100 hover:text-red-500"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div class="flex-1 overflow-y-auto p-6 space-y-6" id="unit-modal-body"></div>
+                            <div class="p-4 border-t bg-slate-50"><button onclick="admin.closeUnitModal()" class="w-full bg-slate-600 text-white py-3 rounded-xl font-bold">إغلاق</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== LESSONS TAB ==================== -->
                 <div id="tab-lessons" class="adm-tab space-y-8">
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-indigo-500">
                         <div class="flex justify-between items-center mb-8 border-b pb-4">
                             <h4 class="font-black text-3xl text-indigo-900" id="l-form-title">إضافة درس جديد</h4>
                             <button onclick="admin.resetLessonForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold"><i class="fas fa-redo"></i> إفراغ</button>
                         </div>
+                        
+                        <!-- Location -->
                         <div class="bg-indigo-50 p-6 rounded-2xl mb-8 border">
                             <h5 class="text-sm font-black text-indigo-700 mb-4">مكان الدرس</h5>
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -171,43 +286,40 @@
                                 <select id="l-unit" class="border-2 border-white p-3 rounded-xl font-bold bg-white"><option value="1">الوحدة الأولى</option><option value="2">الثانية</option><option value="3">الثالثة</option><option value="4">الرابعة</option><option value="5">الخامسة</option><option value="6">السادسة</option></select>
                             </div>
                         </div>
-                        <!-- شرح نصي واحد مع إمكانية إدراج صور -->
-                        <div class="mb-8 border border-indigo-100 rounded-2xl p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h5 class="font-black text-indigo-800">📝 شرح الدرس</h5>
-                                <button onclick="admin.generateAILesson()" id="btn-ai-lesson" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-black shadow-sm text-xs hover:bg-yellow-500"><i class="fas fa-magic"></i> توليد AI</button>
+                        
+                        <!-- Image Upload Section -->
+                        <div class="bg-amber-50/50 p-6 rounded-2xl mb-8 border border-amber-200">
+                            <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600"><i class="fas fa-image text-xl"></i></div><h5 class="font-black text-amber-900">صورة الدرس (اختياري)</h5></div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div><label class="text-xs font-bold text-amber-700 mb-2 block">رابط الصورة</label><input id="l-image-url" placeholder="https://example.com/image.jpg" class="w-full border-2 border-amber-200 p-3.5 rounded-xl font-bold text-left outline-none focus:border-amber-500 bg-white" dir="ltr"></div>
+                                <div><label class="text-xs font-bold text-amber-700 mb-2 block">مكان ظهور الصورة * (إن وجدت)</label><select id="l-image-position" class="w-full border-2 border-amber-200 p-3.5 rounded-xl font-bold outline-none focus:border-amber-500 bg-white"><option value="">-- بدون صورة --</option><option value="top">أعلى الدرس (قبل المحتوى)</option><option value="bottom">أسفل الدرس (بعد المحتوى)</option></select></div>
                             </div>
+                            <div id="l-image-preview-container" class="hidden"><img id="l-image-preview" src="" alt="معاينة الصورة" class="max-h-48 rounded-xl border-2 border-amber-200 object-cover"></div>
+                            <p class="text-xs text-amber-600 font-bold mt-2"><i class="fas fa-info-circle ml-1"></i> عند إدخال رابط الصورة، يجب اختيار مكان ظهورها. إذا تركت المكان فارغاً فلن تظهر الصورة.</p>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="mb-8 border border-indigo-100 rounded-2xl p-6">
+                            <div class="flex justify-between items-center mb-4"><h5 class="font-black text-indigo-800">📝 شرح الدرس</h5><button onclick="admin.generateAILesson()" id="btn-ai-lesson" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-black shadow-sm text-xs hover:bg-yellow-500"><i class="fas fa-magic"></i> توليد AI</button></div>
                             <input id="l-title" placeholder="عنوان الدرس" class="w-full border-2 border-slate-200 p-3 rounded-xl font-black text-lg mb-3 bg-white">
-                            <textarea id="l-content" placeholder="محتوى الشرح... يمكنك إدراج صور باستخدام ![وصف](رابط الصورة) في أي مكان" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-48 outline-none focus:border-indigo-500 bg-white"></textarea>
+                            <textarea id="l-content" placeholder="محتوى الشرح..." class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold h-48 outline-none focus:border-indigo-500 bg-white"></textarea>
                             <div class="mt-3 flex gap-4">
-                                <label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border"><input type="checkbox" id="l-locked" class="w-6 h-6 accent-yellow-500"> <span class="font-black text-sm text-yellow-900"><i class="fas fa-crown"></i> VIP</span></label>
-                                <label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border"><input type="checkbox" id="l-hidden" class="w-6 h-6 accent-red-500"> <span class="font-black text-sm text-red-900"><i class="fas fa-eye-slash"></i> إخفاء</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer flex-1 bg-yellow-50 p-4 rounded-xl border"><input type="checkbox" id="l-locked" class="w-6 h-6 accent-yellow-500"><span class="font-black text-sm text-yellow-900"><i class="fas fa-crown"></i> VIP</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer flex-1 bg-red-50 p-4 rounded-xl border"><input type="checkbox" id="l-hidden" class="w-6 h-6 accent-red-500"><span class="font-black text-sm text-red-900"><i class="fas fa-eye-slash"></i> إخفاء</span></label>
                             </div>
                         </div>
-                        <!-- الفيديوهات -->
+                        
+                        <!-- Videos -->
                         <div class="bg-blue-50/50 p-6 rounded-2xl mb-8 border border-blue-100">
                             <h5 class="font-black text-blue-900 mb-5">🎥 فيديوهات الدرس</h5>
-                            <div class="flex flex-col gap-3 mb-5">
-                                <input type="text" id="v-teacher" placeholder="اسم الأستاذ/ة" class="w-full border-2 border-white p-3.5 rounded-xl font-bold bg-white">
-                                <input type="text" id="v-url" placeholder="رابط يوتيوب" class="w-full border-2 border-white p-3.5 rounded-xl text-left bg-white" dir="ltr">
-                                <button onclick="admin.addVideoToTemp()" class="bg-blue-600 text-white py-3.5 rounded-xl font-black"><i class="fas fa-plus ml-1"></i> إضافة الفيديو</button>
-                            </div>
+                            <div class="flex flex-col gap-3 mb-5"><input type="text" id="v-teacher" placeholder="اسم الأستاذ/ة" class="w-full border-2 border-white p-3.5 rounded-xl font-bold bg-white"><input type="text" id="v-url" placeholder="رابط يوتيوب" class="w-full border-2 border-white p-3.5 rounded-xl text-left bg-white" dir="ltr"><button onclick="admin.addVideoToTemp()" class="bg-blue-600 text-white py-3.5 rounded-xl font-black"><i class="fas fa-plus ml-1"></i> إضافة الفيديو</button></div>
                             <div id="temp-videos-list" class="space-y-2 flex-1 overflow-y-auto max-h-40 pr-2"></div>
                         </div>
-                        <!-- الأسئلة -->
+                        
+                        <!-- Questions -->
                         <div class="bg-emerald-50/50 p-6 md:p-8 rounded-[2rem] mb-8 border border-emerald-100">
-                            <div class="flex justify-between items-center mb-6 border-b pb-5">
-                                <h5 class="font-black text-emerald-900">❓ تدريبات</h5>
-                                <div class="flex gap-2 items-center bg-white p-1.5 rounded-xl border">
-                                    <label class="text-xs font-bold text-emerald-600">عدد:</label>
-                                    <input type="number" id="l-ai-q-count" value="5" class="w-12 border-none text-center font-black outline-none">
-                                    <button onclick="admin.generateAILessonQuestions()" id="btn-ai-l-quiz" class="bg-emerald-600 text-white px-5 py-2 rounded-lg font-black text-sm"><i class="fas fa-robot"></i> توليد</button>
-                                </div>
-                            </div>
-                            <div class="flex gap-3 mb-6 bg-white p-1.5 rounded-xl border w-max">
-                                <button onclick="document.getElementById('l-manual-add').classList.remove('hidden'); document.getElementById('l-bulk-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm">إضافة يدوية</button>
-                                <button onclick="document.getElementById('l-bulk-add').classList.remove('hidden'); document.getElementById('l-manual-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm">JSON</button>
-                            </div>
+                            <div class="flex justify-between items-center mb-6 border-b pb-5"><h5 class="font-black text-emerald-900">❓ تدريبات</h5><div class="flex gap-2 items-center bg-white p-1.5 rounded-xl border"><label class="text-xs font-bold text-emerald-600">عدد:</label><input type="number" id="l-ai-q-count" value="5" class="w-12 border-none text-center font-black outline-none"><button onclick="admin.generateAILessonQuestions()" id="btn-ai-l-quiz" class="bg-emerald-600 text-white px-5 py-2 rounded-lg font-black text-sm"><i class="fas fa-robot"></i> توليد</button></div></div>
+                            <div class="flex gap-3 mb-6 bg-white p-1.5 rounded-xl border w-max"><button onclick="document.getElementById('l-manual-add').classList.remove('hidden');document.getElementById('l-bulk-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm">إضافة يدوية</button><button onclick="document.getElementById('l-bulk-add').classList.remove('hidden');document.getElementById('l-manual-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm">JSON</button></div>
                             <div id="l-manual-add" class="hidden space-y-4 mb-6 bg-white p-6 rounded-2xl border">
                                 <div class="flex gap-2 mb-4"><label class="text-xs font-bold">نوع السؤال:</label><select id="l-q-type" class="border-2 p-2 rounded-lg text-sm font-bold" onchange="admin.toggleQuestionTypeFields('l')"><option value="mcq">اختيار من متعدد</option><option value="essay">مقالي</option><option value="ordering">ترتيب</option></select></div>
                                 <textarea id="l-q-text" placeholder="نص السؤال" class="w-full border-2 p-4 rounded-xl font-bold bg-slate-50"></textarea>
@@ -215,13 +327,10 @@
                                 <div id="l-ordering-fields" class="hidden space-y-2"><label class="text-xs font-bold">عناصر الترتيب (سطر لكل عنصر)</label><textarea id="l-q-order-items" rows="5" class="w-full border-2 p-4 rounded-xl font-bold bg-slate-50"></textarea></div>
                                 <button onclick="admin.addQuestionToTemp('l')" class="w-full bg-slate-800 text-white py-3.5 rounded-xl font-black text-sm">إضافة السؤال</button>
                             </div>
-                            <div id="l-bulk-add" class="hidden space-y-4 mb-6 bg-slate-900 p-6 rounded-2xl border">
-                                <p class="text-xs text-emerald-400 font-mono">[{"text":"...", "opts":[], "correctAnswer":0, "type":"mcq"}]</p>
-                                <textarea id="l-bulk-json" class="w-full h-32 bg-slate-800 text-blue-300 p-4 rounded-xl font-mono text-left" dir="ltr"></textarea>
-                                <button onclick="admin.addBulkQuestions('l')" class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-black text-sm">استيراد</button>
-                            </div>
+                            <div id="l-bulk-add" class="hidden space-y-4 mb-6 bg-slate-900 p-6 rounded-2xl border"><p class="text-xs text-emerald-400 font-mono">[{"text":"...","opts":[],"correctAnswer":0,"type":"mcq"}]</p><textarea id="l-bulk-json" class="w-full h-32 bg-slate-800 text-blue-300 p-4 rounded-xl font-mono text-left" dir="ltr"></textarea><button onclick="admin.addBulkQuestions('l')" class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-black text-sm">استيراد</button></div>
                             <div id="temp-l-questions-list" class="space-y-2 max-h-56 overflow-y-auto pr-2"></div>
                         </div>
+                        
                         <button id="l-save-btn" onclick="admin.saveLesson()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-indigo-700"><i class="fas fa-paper-plane ml-2"></i> حفظ الدرس</button>
                     </div>
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border">
@@ -230,22 +339,16 @@
                     </div>
                 </div>
 
-                <!-- QUIZZES TAB (مشابه للدروس مع الأسئلة المتقدمة) -->
+                <!-- ==================== QUIZZES TAB ==================== -->
                 <div id="tab-quizzes" class="adm-tab space-y-8">
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-blue-500">
                         <div class="flex justify-between items-center mb-8 border-b pb-4"><h4 class="font-black text-3xl text-blue-900" id="q-form-title">إنشاء اختبار</h4><button onclick="admin.resetQuizForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold"><i class="fas fa-redo"></i> إفراغ</button></div>
                         <div class="bg-blue-50 p-6 rounded-2xl mb-8 border"><h5 class="text-sm font-black text-blue-700 mb-4">مسار الاختبار</h5><div class="grid grid-cols-2 md:grid-cols-5 gap-3"><select id="q-type" class="border-2 border-white p-3 rounded-xl font-bold bg-white" onchange="admin.updateHierarchy('q')"><option value="public">عام</option><option value="azhar">أزهر</option></select><select id="q-stage" class="border-2 border-white p-3 rounded-xl font-bold bg-white" onchange="admin.updateHierarchy('q')"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select><select id="q-grade" class="border-2 border-white p-3 rounded-xl font-bold bg-white"></select><select id="q-subject" class="border-2 border-white p-3 rounded-xl font-bold bg-white"></select><select id="q-unit" class="border-2 border-white p-3 rounded-xl font-bold bg-white"><option value="0">شامل</option><option value="1">الوحدة 1</option><option value="2">2</option><option value="3">3</option></select></div></div>
                         <input id="q-title" placeholder="اسم الاختبار" class="w-full border-2 border-slate-200 p-4 rounded-xl font-black text-xl mb-8 bg-slate-50">
                         <div class="bg-slate-50 p-6 md:p-8 rounded-2xl mb-8 border">
-                            <div class="flex gap-3 mb-6 bg-white p-1.5 rounded-xl border w-max"><button onclick="document.getElementById('q-manual-add').classList.remove('hidden'); document.getElementById('q-bulk-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm">يدوي</button><button onclick="document.getElementById('q-bulk-add').classList.remove('hidden'); document.getElementById('q-manual-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm">JSON</button></div>
-                            <div id="q-manual-add" class="hidden bg-white p-6 rounded-2xl border mb-6">
-                                <div class="flex gap-2 mb-4"><label class="text-xs font-bold">نوع السؤال:</label><select id="q-q-type" class="border-2 p-2 rounded-lg text-sm font-bold" onchange="admin.toggleQuestionTypeFields('q')"><option value="mcq">اختيار</option><option value="essay">مقالي</option><option value="ordering">ترتيب</option></select></div>
-                                <textarea id="q-text" placeholder="نص السؤال" class="w-full border-2 p-4 rounded-xl mb-4 font-bold bg-slate-50"></textarea>
-                                <div id="q-mcq-fields"><div class="grid grid-cols-2 gap-4 mb-4"><input id="q-opt0" placeholder="أ" class="border-2 p-3 rounded-xl font-bold"><input id="q-opt1" placeholder="ب" class="border-2 p-3 rounded-xl font-bold"><input id="q-opt2" placeholder="ج" class="border-2 p-3 rounded-xl font-bold"><input id="q-opt3" placeholder="د" class="border-2 p-3 rounded-xl font-bold"></div><input id="q-ans" placeholder="الإجابة الصحيحة" class="w-full border-2 border-emerald-200 bg-emerald-50 p-4 rounded-xl text-center font-black mb-4"></div>
-                                <div id="q-ordering-fields" class="hidden space-y-2 mb-4"><label class="text-xs font-bold">عناصر الترتيب</label><textarea id="q-q-order-items" rows="5" class="w-full border-2 p-4 rounded-xl font-bold bg-slate-50"></textarea></div>
-                                <button onclick="admin.addQuestionToTemp('q')" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black">إضافة السؤال</button>
-                            </div>
-                            <div id="q-bulk-add" class="hidden bg-slate-900 p-6 md:p-8 rounded-2xl border mb-6"><p class="text-xs text-blue-400 font-mono mb-4">[{"text":"...", "opts":[], "correctAnswer":0, "type":"mcq"}]</p><textarea id="q-bulk-json" class="w-full h-40 bg-slate-800 text-blue-300 p-4 rounded-xl font-mono" dir="ltr"></textarea><button onclick="admin.addBulkQuestions('q')" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black mt-4">استيراد</button></div>
+                            <div class="flex gap-3 mb-6 bg-white p-1.5 rounded-xl border w-max"><button onclick="document.getElementById('q-manual-add').classList.remove('hidden');document.getElementById('q-bulk-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm">يدوي</button><button onclick="document.getElementById('q-bulk-add').classList.remove('hidden');document.getElementById('q-manual-add').classList.add('hidden')" class="bg-slate-100 text-slate-800 px-6 py-2 rounded-lg font-bold text-sm">JSON</button></div>
+                            <div id="q-manual-add" class="hidden bg-white p-6 rounded-2xl border mb-6"><div class="flex gap-2 mb-4"><label class="text-xs font-bold">نوع السؤال:</label><select id="q-q-type" class="border-2 p-2 rounded-lg text-sm font-bold" onchange="admin.toggleQuestionTypeFields('q')"><option value="mcq">اختيار</option><option value="essay">مقالي</option><option value="ordering">ترتيب</option></select></div><textarea id="q-text" placeholder="نص السؤال" class="w-full border-2 p-4 rounded-xl mb-4 font-bold bg-slate-50"></textarea><div id="q-mcq-fields"><div class="grid grid-cols-2 gap-4 mb-4"><input id="q-opt0" placeholder="أ" class="border-2 p-3 rounded-xl font-bold"><input id="q-opt1" placeholder="ب" class="border-2 p-3 rounded-xl font-bold"><input id="q-opt2" placeholder="ج" class="border-2 p-3 rounded-xl font-bold"><input id="q-opt3" placeholder="د" class="border-2 p-3 rounded-xl font-bold"></div><input id="q-ans" placeholder="الإجابة الصحيحة" class="w-full border-2 border-emerald-200 bg-emerald-50 p-4 rounded-xl text-center font-black mb-4"></div><div id="q-ordering-fields" class="hidden space-y-2 mb-4"><label class="text-xs font-bold">عناصر الترتيب</label><textarea id="q-q-order-items" rows="5" class="w-full border-2 p-4 rounded-xl font-bold bg-slate-50"></textarea></div><button onclick="admin.addQuestionToTemp('q')" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black">إضافة السؤال</button></div>
+                            <div id="q-bulk-add" class="hidden bg-slate-900 p-6 md:p-8 rounded-2xl border mb-6"><p class="text-xs text-blue-400 font-mono mb-4">[{"text":"...","opts":[],"correctAnswer":0,"type":"mcq"}]</p><textarea id="q-bulk-json" class="w-full h-40 bg-slate-800 text-blue-300 p-4 rounded-xl font-mono" dir="ltr"></textarea><button onclick="admin.addBulkQuestions('q')" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black mt-4">استيراد</button></div>
                             <h5 class="font-black text-slate-800 mb-4 border-b pb-2"><i class="fas fa-list-ol text-blue-500"></i> الأسئلة الحالية</h5>
                             <div id="temp-q-questions-list" class="space-y-3 max-h-64 overflow-y-auto pr-2"></div>
                         </div>
@@ -255,7 +358,7 @@
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border"><h4 class="font-black text-2xl mb-8 text-slate-800 border-b pb-4"><i class="fas fa-archive text-blue-400"></i> أرشيف الاختبارات</h4><div id="quizzes-list-display" class="grid grid-cols-1 lg:grid-cols-2 gap-5 max-h-[700px] overflow-y-auto pr-2"></div></div>
                 </div>
 
-                <!-- SIMULATIONS TAB -->
+                <!-- ==================== SIMULATIONS TAB ==================== -->
                 <div id="tab-simulations" class="adm-tab space-y-8">
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-yellow-400">
                         <div class="flex justify-between items-center mb-8 border-b pb-4"><h3 class="font-black text-3xl text-yellow-900" id="sim-form-title">إنشاء محاكي</h3><button onclick="admin.resetSimForm()" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold"><i class="fas fa-redo"></i> إفراغ</button></div>
@@ -270,7 +373,7 @@
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border"><h4 class="font-black text-2xl mb-8 text-slate-800 border-b pb-4"><i class="fas fa-archive text-yellow-500"></i> أرشيف المحاكيات</h4><div id="simulations-list-display" class="grid grid-cols-1 lg:grid-cols-2 gap-5 max-h-[700px] overflow-y-auto pr-2"></div></div>
                 </div>
 
-                <!-- FILES MANAGEMENT -->
+                <!-- ==================== FILES MANAGEMENT TAB ==================== -->
                 <div id="tab-files-mgmt" class="adm-tab space-y-8">
                     <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-book text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">الكتب والمذكرات</h3></div></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
@@ -282,21 +385,25 @@
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">الملفات الحالية</h4><div id="files-mgmt-list" class="space-y-3 max-h-[600px] overflow-y-auto stagger-animation"></div></div>
                 </div>
 
-                <!-- CUSTOM SUBJECTS -->
-                <div id="tab-subjects-mgmt" class="adm-tab space-y-8">
-                    <div class="bg-gradient-to-r from-fuchsia-500 to-purple-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-th-large text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">المواد المخصصة</h3></div></div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">إضافة مادة جديدة</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><select id="custom-stage" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><option value="primary">ابتدائي</option><option value="prep">إعدادي</option><option value="sec">ثانوي</option></select><input id="custom-name" placeholder="اسم المادة" class="border-2 p-4 rounded-xl font-bold bg-slate-50"><input id="custom-icon" placeholder="أيقونة (fa-star)" class="border-2 p-4 rounded-xl font-bold bg-slate-50" value="fa-star"></div><button onclick="admin.addCustomSubject()" class="w-full bg-fuchsia-600 text-white py-4 rounded-2xl font-black"><i class="fas fa-plus ml-2"></i> إضافة المادة</button></div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">المواد المضافة</h4><div id="custom-subjects-list" class="space-y-3 stagger-animation"></div></div>
-                </div>
-
-                <!-- LEADERBOARD MANAGEMENT -->
+                <!-- ==================== LEADERBOARD MANAGEMENT TAB ==================== -->
                 <div id="tab-leaderboard-mgmt" class="adm-tab space-y-8">
                     <div class="bg-gradient-to-r from-amber-500 to-yellow-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-trophy text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">المتصدرين</h3></div></div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">مسح التصنيفات</h4><div class="grid grid-cols-2 md:grid-cols-4 gap-4"><button onclick="admin.resetLeaderboard('daily')" class="bg-red-50 text-red-600 p-4 rounded-xl font-black hover:bg-red-100 border border-red-200">مسح اليومي</button><button onclick="admin.resetLeaderboard('weekly')" class="bg-orange-50 text-orange-600 p-4 rounded-xl font-black hover:bg-orange-100 border border-orange-200">الأسبوعي</button><button onclick="admin.resetLeaderboard('monthly')" class="bg-amber-50 text-amber-600 p-4 rounded-xl font-black hover:bg-amber-100 border border-amber-200">الشهري</button><button onclick="admin.resetLeaderboard('allTime')" class="bg-slate-50 text-slate-600 p-4 rounded-xl font-black hover:bg-slate-100 border border-slate-200">الكل</button></div></div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">ملفات الطلاب</h4><div id="students-profiles-list" class="space-y-3 max-h-[500px] overflow-y-auto stagger-animation"></div></div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
+                        <h4 class="font-black text-xl mb-6">مسح التصنيفات</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <button onclick="admin.resetLeaderboard('daily')" class="bg-red-50 text-red-600 p-4 rounded-xl font-black hover:bg-red-100 border border-red-200">مسح اليومي</button>
+                            <button onclick="admin.resetLeaderboard('weekly')" class="bg-orange-50 text-orange-600 p-4 rounded-xl font-black hover:bg-orange-100 border border-orange-200">الأسبوعي</button>
+                            <button onclick="admin.resetLeaderboard('monthly')" class="bg-amber-50 text-amber-600 p-4 rounded-xl font-black hover:bg-amber-100 border border-amber-200">الشهري</button>
+                            <button onclick="admin.resetLeaderboard('allTime')" class="bg-slate-50 text-slate-600 p-4 rounded-xl font-black hover:bg-slate-100 border border-slate-200">الكل</button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border">
+                        <h4 class="font-black text-xl mb-6">ملفات الطلاب (مرتبة حسب XP)</h4>
+                        <div id="students-profiles-list" class="space-y-3 max-h-[500px] overflow-y-auto stagger-animation"></div>
+                    </div>
                 </div>
 
-                <!-- LIVE SESSIONS MANAGEMENT -->
+                <!-- ==================== LIVE SESSIONS MANAGEMENT TAB ==================== -->
                 <div id="tab-live-sessions-mgmt" class="adm-tab space-y-8">
                     <div class="bg-gradient-to-r from-red-500 to-rose-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-broadcast-tower text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">البث المباشر</h3></div></div>
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-red-500">
@@ -309,14 +416,14 @@
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border"><h4 class="font-black text-xl mb-6">الجلسات الحالية</h4><div id="sessions-mgmt-list" class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto stagger-animation"></div></div>
                 </div>
 
-                <!-- COMMUNITY MANAGEMENT -->
+                <!-- ==================== COMMUNITY MANAGEMENT TAB ==================== -->
                 <div id="tab-community-mgmt" class="adm-tab space-y-8">
                     <div class="bg-gradient-to-r from-purple-500 to-pink-600 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center gap-6"><div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center"><i class="fas fa-users text-4xl"></i></div><div><h3 class="text-3xl font-black mb-2">المجتمع</h3></div></div>
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">منشورات المنتدى</h4><div id="forums-mgmt-list" class="space-y-3 max-h-[500px] overflow-y-auto stagger-animation"></div></div>
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">مجموعات الدراسة</h4><button onclick="admin.createStudyGroup()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black mb-6"><i class="fas fa-plus"></i> إنشاء مجموعة</button><div id="groups-mgmt-list" class="space-y-3 max-h-[400px] overflow-y-auto stagger-animation"></div></div>
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border"><h4 class="font-black text-xl mb-6">مجموعات الدراسة</h4><button onclick="admin.createStudyGroup()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black mb-6"><i class="fas fa-plus ml-2"></i> إنشاء مجموعة</button><div id="groups-mgmt-list" class="space-y-3 max-h-[400px] overflow-y-auto stagger-animation"></div></div>
                 </div>
 
-                <!-- USERS TAB -->
+                <!-- ==================== USERS TAB ==================== -->
                 <div id="tab-users" class="adm-tab space-y-8">
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-emerald-500">
                         <h4 class="font-black text-2xl mb-8 text-emerald-900"><i class="fas fa-user-plus bg-emerald-100 p-3 rounded-xl"></i> حساب جديد</h4>
@@ -329,7 +436,7 @@
                     </div>
                 </div>
 
-                <!-- POSTS & ANNOUNCEMENTS -->
+                <!-- ==================== POSTS TAB ==================== -->
                 <div id="tab-posts" class="adm-tab space-y-8">
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-orange-500">
                         <h3 class="font-black text-2xl mb-8 text-orange-800"><i class="fas fa-newspaper bg-orange-100 p-3 rounded-xl"></i> خبر جديد</h3>
@@ -337,6 +444,8 @@
                     </div>
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border"><h4 class="font-black text-xl mb-6">الأخبار السابقة</h4><div id="posts-list-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto"></div></div>
                 </div>
+
+                <!-- ==================== ANNOUNCEMENTS TAB ==================== -->
                 <div id="tab-announcements" class="adm-tab space-y-8">
                     <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-t-8 border-rose-500">
                         <div class="bg-rose-50 p-5 rounded-2xl mb-8 border"><i class="fas fa-info-circle text-rose-500 text-3xl"></i><h3 class="font-black text-xl text-rose-800">رسالة البوب أب</h3></div>
@@ -348,6 +457,7 @@
     </div>
 
     <script>
+        // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
             apiKey: "AIzaSyDyaSx72GXPLZqvfinZm6lpWvtLi3jvrR4",
             authDomain: "talebyg-a2609.firebaseapp.com",
@@ -359,28 +469,41 @@
         const database = firebase.database();
 
         const unitNames = ["", "الوحدة الأولى", "الوحدة الثانية", "الوحدة الثالثة", "الوحدة الرابعة", "الوحدة الخامسة", "الوحدة السادسة"];
+        
         const subjectMapping = {
-            primary: [ {id:'arabic',name:'لغة عربية'},{id:'math',name:'رياضيات'},{id:'science',name:'علوم'},{id:'english',name:'إنجليزي'},{id:'social',name:'دراسات'},{id:'religion',name:'دين'} ],
-            prep: [ {id:'arabic',name:'لغة عربية'},{id:'math',name:'رياضيات'},{id:'science',name:'علوم'},{id:'english',name:'إنجليزي'},{id:'social',name:'دراسات'},{id:'computer',name:'حاسب'} ],
-            sec: [ {id:'arabic',name:'عربي'},{id:'english',name:'إنجليزي'},{id:'french',name:'فرنساوي'},{id:'physics',name:'فيزياء'},{id:'chemistry',name:'كيمياء'},{id:'biology',name:'أحياء'},{id:'history',name:'تاريخ'},{id:'geography',name:'جغرافيا'},{id:'math',name:'رياضيات'} ]
+            primary: [
+                {id:'arabic',name:'لغة عربية'},{id:'math',name:'رياضيات'},{id:'science',name:'علوم'},
+                {id:'english',name:'إنجليزي'},{id:'social',name:'دراسات'},{id:'religion',name:'دين'}
+            ],
+            prep: [
+                {id:'arabic',name:'لغة عربية'},{id:'math',name:'رياضيات'},{id:'science',name:'علوم'},
+                {id:'english',name:'إنجليزي'},{id:'social',name:'دراسات'},{id:'computer',name:'حاسب'}
+            ],
+            sec: [
+                {id:'arabic',name:'عربي'},{id:'english',name:'إنجليزي'},{id:'french',name:'فرنساوي'},
+                {id:'physics',name:'فيزياء'},{id:'chemistry',name:'كيمياء'},{id:'biology',name:'أحياء'},
+                {id:'history',name:'تاريخ'},{id:'geography',name:'جغرافيا'},{id:'math',name:'رياضيات'}
+            ]
         };
 
+        // ==================== APP HELPERS ====================
         const app = {
             login: (e) => {
                 e.preventDefault();
                 const em = document.getElementById('adm-email').value, p = document.getElementById('adm-pass').value;
                 if(!em || !p) return app.notify("أدخل البيانات", "error");
                 document.getElementById('login-btn').innerText = "جاري التحقق...";
-                firebase.auth().signInWithEmailAndPassword(em, p).then(() => app.notify("تم الدخول")).catch(e => {
-                    document.getElementById('login-btn').innerText = "تسجيل الدخول"; alert(e.message);
-                });
+                firebase.auth().signInWithEmailAndPassword(em, p)
+                    .then(() => app.notify("تم الدخول"))
+                    .catch(e => { document.getElementById('login-btn').innerText = "تسجيل الدخول"; alert(e.message); });
             },
             logout: () => firebase.auth().signOut().then(() => location.reload()),
             notify: (msg, type = 'success') => {
                 const t = document.getElementById('toast-notification'), m = document.getElementById('toast-msg'), i = document.getElementById('toast-icon');
                 i.className = type === 'error' ? 'fas fa-exclamation-triangle text-2xl' : 'fas fa-check-circle text-2xl';
                 t.className = `fixed top-5 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl text-white font-bold min-w-[300px] justify-center transition-all duration-300 transform translate-y-0 ${type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`;
-                m.innerText = msg; setTimeout(() => t.classList.replace('translate-y-0', '-translate-y-32'), 3000);
+                m.innerText = msg; 
+                setTimeout(() => t.classList.replace('translate-y-0', '-translate-y-32'), 3000);
             }
         };
 
@@ -398,95 +521,426 @@
             }
         };
 
+        // ==================== ADMIN MAIN OBJECT ====================
         const admin = {
             tempVideos: [], tempLessonQuestions: [], tempQuizQuestions: [],
             editLessonId: null, editQuizId: null, editSimId: null, editSessionId: null, editFileId: null,
             dbData: {},
+            currentManagedSubject: null,
 
             init: () => {
                 firebase.auth().onAuthStateChanged(user => {
                     if(user) {
-                        document.getElementById('login-view').classList.add('hidden'); document.getElementById('panel-view').classList.remove('hidden');
+                        document.getElementById('login-view').classList.add('hidden'); 
+                        document.getElementById('panel-view').classList.remove('hidden');
                         admin.fetchData();
-                        setTimeout(() => { ['l','q','sim'].forEach(p => admin.updateHierarchy(p)); admin.updateVisHierarchy(); }, 500);
+                        setTimeout(() => { 
+                            ['l','q','sim'].forEach(p => admin.updateHierarchy(p)); 
+                            admin.updateVisHierarchy(); 
+                        }, 500);
                     }
+                });
+                document.getElementById('sub-icon')?.addEventListener('input', function() {
+                    const iconClass = this.value.trim() || 'fa-star';
+                    document.getElementById('sub-icon-preview').className = `fas ${iconClass}`;
+                });
+                document.getElementById('l-image-url')?.addEventListener('input', function() {
+                    const url = this.value.trim();
+                    const previewContainer = document.getElementById('l-image-preview-container');
+                    const previewImg = document.getElementById('l-image-preview');
+                    if(url) { previewImg.src = url; previewContainer.classList.remove('hidden'); }
+                    else { previewContainer.classList.add('hidden'); }
                 });
             },
 
             toggleSidebar: () => { document.getElementById('sidebar').classList.toggle('open'); },
 
             switchTab: (t) => {
-                document.querySelectorAll('.adm-tab').forEach(e => e.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active');
-                document.querySelectorAll('.side-btn').forEach(e => e.classList.remove('active')); event.currentTarget.classList.add('active');
-                document.getElementById('top-title').innerText = event.currentTarget.innerText.trim();
+                document.querySelectorAll('.adm-tab').forEach(e => e.classList.remove('active')); 
+                const tabEl = document.getElementById('tab-'+t);
+                if(tabEl) tabEl.classList.add('active');
+                document.querySelectorAll('.side-btn').forEach(e => e.classList.remove('active')); 
+                if(event?.currentTarget) event.currentTarget.classList.add('active');
+                document.getElementById('top-title').innerText = event?.currentTarget?.innerText?.trim() || '';
                 if(window.innerWidth < 768) admin.toggleSidebar(); 
                 window.scrollTo(0,0);
+                // تشغيل دوال التحميل الخاصة بكل تبويب
+                if(t === 'subjects-manager') admin.renderSubjectsTree();
                 if(t === 'leaderboard-mgmt') admin.renderLeaderboardMgmt();
                 if(t === 'live-sessions-mgmt') admin.renderLiveSessionsMgmt();
                 if(t === 'community-mgmt') admin.renderCommunityMgmt();
                 if(t === 'files-mgmt') admin.renderFilesMgmt();
-                if(t === 'subjects-mgmt') admin.renderCustomSubjects();
+                if(t === 'lessons') admin.renderLessons();
+                if(t === 'quizzes') admin.renderQuizzes();
+                if(t === 'simulations') admin.renderSimulations();
+                if(t === 'users') admin.renderUsers();
+                if(t === 'posts') admin.renderPosts();
+                if(t === 'announcements') admin.loadAnnouncementData();
+                if(t === 'visibility') admin.renderHiddenList();
+                if(t === 'settings') admin.loadSettingsData();
+            },
+
+            switchTabDirect: (tabId) => {
+                document.querySelectorAll('.adm-tab').forEach(e => e.classList.remove('active')); 
+                const tabEl = document.getElementById('tab-'+tabId);
+                if(tabEl) tabEl.classList.add('active');
+                document.querySelectorAll('.side-btn').forEach(e => e.classList.remove('active'));
+                const sideBtn = document.querySelector(`.side-btn[onclick*="${tabId}"]`);
+                if(sideBtn) sideBtn.classList.add('active');
+                document.getElementById('top-title').innerText = sideBtn?.innerText?.trim() || '';
+                window.scrollTo(0,0);
+                if(tabId === 'subjects-manager') admin.renderSubjectsTree();
+                if(tabId === 'leaderboard-mgmt') admin.renderLeaderboardMgmt();
+                if(tabId === 'live-sessions-mgmt') admin.renderLiveSessionsMgmt();
+                if(tabId === 'community-mgmt') admin.renderCommunityMgmt();
+                if(tabId === 'files-mgmt') admin.renderFilesMgmt();
+                if(tabId === 'lessons') admin.renderLessons();
+                if(tabId === 'quizzes') admin.renderQuizzes();
+                if(tabId === 'simulations') admin.renderSimulations();
+                if(tabId === 'users') admin.renderUsers();
+                if(tabId === 'posts') admin.renderPosts();
+                if(tabId === 'announcements') admin.loadAnnouncementData();
+                if(tabId === 'visibility') admin.renderHiddenList();
+                if(tabId === 'settings') admin.loadSettingsData();
             },
 
             fetchData: () => {
                 database.ref('/').on('value', (snapshot) => {
                     admin.dbData = snapshot.val() || {};
-                    admin.renderUsers(); admin.renderLessons(); admin.renderQuizzes(); admin.renderSimulations(); admin.renderPosts();
+                    admin.renderUsers(); 
+                    admin.renderLessons(); 
+                    admin.renderQuizzes(); 
+                    admin.renderSimulations(); 
+                    admin.renderPosts();
                     admin.renderHiddenList();
-                    if(admin.dbData.settings) {
-                        const set = admin.dbData.settings;
-                        document.getElementById('set-site-name').value = set.siteName || '';
-                        document.getElementById('set-whatsapp').value = set.whatsapp || '';
-                        document.getElementById('set-site-logo').value = set.siteLogo || '';
-                        document.getElementById('set-api-key').value = set.apiKey || '';
-                        if(set.aiModel) document.getElementById('set-ai-model').innerHTML = `<option value="${set.aiModel}">${set.aiModel}</option>`;
-                        document.getElementById('set-about').value = set.aboutText || '';
-                        document.getElementById('set-terms').value = set.termsText || '';
-                        document.getElementById('set-privacy').value = set.privacyText || '';
-                        const sl = set.socialLinks || {};
-                        document.getElementById('set-fb').value = sl.facebook || '';
-                        document.getElementById('set-yt').value = sl.youtube || '';
-                        document.getElementById('set-wa').value = sl.whatsapp || '';
-                    }
-                    if(admin.dbData.announcements) {
-                        document.getElementById('ann-text').value = admin.dbData.announcements.text || '';
-                        document.getElementById('ann-active').checked = admin.dbData.announcements.isActive || false;
-                        if(admin.dbData.announcements.expiry) document.getElementById('ann-expiry').value = Math.ceil((admin.dbData.announcements.expiry - Date.now()) / 86400000);
-                    }
+                    admin.renderFilesMgmt();
+                    admin.renderSubjectsTree();
+                    admin.renderLeaderboardMgmt();
+                    admin.renderLiveSessionsMgmt();
+                    admin.renderCommunityMgmt();
+                    admin.loadSettingsData();
+                    admin.loadAnnouncementData();
                 });
             },
 
-            // ------ AI Generation ------
-            generateAILesson: async () => {
-                const topic = document.getElementById('l-title').value; if(!topic) return app.notify("اكتب عنوان الدرس أولاً", "error");
-                const btn = document.getElementById('btn-ai-lesson'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...'; btn.disabled = true;
-                try {
-                    const prompt = `اكتب شرحاً تعليمياً مفصلاً حول: ${topic}. استخدم التنسيق التالي: # للعناوين، ## للعناوين الفرعية، ** لنص مهم، :::info للتنبيهات، :::warning للتحذيرات، - للقوائم، > للاقتباسات. أضف أمثلة وصوراً إن أمكن باستخدام ![وصف](رابط).`;
-                    document.getElementById('l-content').value = await aiHelper.generate(prompt);
-                    app.notify("تم التوليد");
-                } catch(e) { alert(e.message); }
-                btn.innerHTML = '<i class="fas fa-magic"></i> توليد AI'; btn.disabled = false;
-            },
-            generateAILessonQuestions: async () => {
-                const topic = document.getElementById('l-title').value, count = document.getElementById('l-ai-q-count').value || 5;
-                if(!topic) return app.notify("اكتب عنوان الدرس", "error");
-                const btn = document.getElementById('btn-ai-l-quiz'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
-                try {
-                    const res = await aiHelper.generate(`قم بإنشاء ${count} أسئلة اختيار من متعدد حول: ${topic}. أعد الإجابة بصيغة JSON array فقط: [{"text": "السؤال", "opts": ["أ", "ب", "ج", "د"], "correctAnswer": 0, "type": "mcq"}]`);
-                    admin.tempLessonQuestions.push(...JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim())); admin.renderTempQuestions('l'); app.notify("تم التوليد");
-                } catch(e) { alert(e.message); }
-                btn.innerHTML = '<i class="fas fa-robot"></i> توليد'; btn.disabled = false;
+            loadSettingsData: () => {
+                if(admin.dbData.settings) {
+                    const set = admin.dbData.settings;
+                    const siteNameEl = document.getElementById('set-site-name');
+                    const whatsappEl = document.getElementById('set-whatsapp');
+                    const siteLogoEl = document.getElementById('set-site-logo');
+                    const apiKeyEl = document.getElementById('set-api-key');
+                    const aiModelEl = document.getElementById('set-ai-model');
+                    const aboutEl = document.getElementById('set-about');
+                    const termsEl = document.getElementById('set-terms');
+                    const privacyEl = document.getElementById('set-privacy');
+                    const fbEl = document.getElementById('set-fb');
+                    const ytEl = document.getElementById('set-yt');
+                    const waEl = document.getElementById('set-wa');
+                    if(siteNameEl) siteNameEl.value = set.siteName || '';
+                    if(whatsappEl) whatsappEl.value = set.whatsapp || '';
+                    if(siteLogoEl) siteLogoEl.value = set.siteLogo || '';
+                    if(apiKeyEl) apiKeyEl.value = set.apiKey || '';
+                    if(aiModelEl && set.aiModel) aiModelEl.innerHTML = `<option value="${set.aiModel}">${set.aiModel}</option>`;
+                    if(aboutEl) aboutEl.value = set.aboutText || '';
+                    if(termsEl) termsEl.value = set.termsText || '';
+                    if(privacyEl) privacyEl.value = set.privacyText || '';
+                    const sl = set.socialLinks || {};
+                    if(fbEl) fbEl.value = sl.facebook || '';
+                    if(ytEl) ytEl.value = sl.youtube || '';
+                    if(waEl) waEl.value = sl.whatsapp || '';
+                }
             },
 
-            // ------ Lessons ------
-            addVideoToTemp: () => {
-                const name = document.getElementById('v-teacher').value.trim(), url = document.getElementById('v-url').value.trim();
-                if(name && url) { admin.tempVideos.push({ name, url }); admin.renderTempVideos(); document.getElementById('v-teacher').value = ''; document.getElementById('v-url').value = ''; }
+            loadAnnouncementData: () => {
+                if(admin.dbData.announcements) {
+                    const annTextEl = document.getElementById('ann-text');
+                    const annActiveEl = document.getElementById('ann-active');
+                    const annExpiryEl = document.getElementById('ann-expiry');
+                    if(annTextEl) annTextEl.value = admin.dbData.announcements.text || '';
+                    if(annActiveEl) annActiveEl.checked = admin.dbData.announcements.isActive || false;
+                    if(annExpiryEl && admin.dbData.announcements.expiry) 
+                        annExpiryEl.value = Math.max(0, Math.ceil((admin.dbData.announcements.expiry - Date.now()) / 86400000));
+                }
             },
-            renderTempVideos: () => { document.getElementById('temp-videos-list').innerHTML = admin.tempVideos.map((v,i) => `<div class="bg-white p-3 rounded-xl flex justify-between text-sm"><span><i class="fas fa-video ml-2"></i>${v.name}</span><button onclick="admin.tempVideos.splice(${i},1);admin.renderTempVideos()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join(''); },
+
+            // ==================== SUBJECTS MANAGER ====================
+            onSubjectStageChange: () => {
+                const stage = document.getElementById('sub-stage').value;
+                const gradeSelect = document.getElementById('sub-grade');
+                if(!stage) { gradeSelect.innerHTML = '<option value="">-- اختر المرحلة أولاً --</option>'; return; }
+                let options = '<option value="">-- اختر الصف --</option>';
+                if(stage === 'primary') {
+                    options += '<option value="4">الصف الرابع الابتدائي</option>';
+                    options += '<option value="5">الصف الخامس الابتدائي</option>';
+                    options += '<option value="6">الصف السادس الابتدائي</option>';
+                } else if(stage === 'prep') {
+                    options += '<option value="1">الصف الأول الإعدادي</option>';
+                    options += '<option value="2">الصف الثاني الإعدادي</option>';
+                    options += '<option value="3">الصف الثالث الإعدادي</option>';
+                } else if(stage === 'sec') {
+                    options += '<option value="1">الصف الأول الثانوي</option>';
+                    options += '<option value="2">الصف الثاني الثانوي</option>';
+                    options += '<option value="3">الصف الثالث الثانوي</option>';
+                }
+                gradeSelect.innerHTML = options;
+            },
+
+            validateNewSubject: () => {
+                const type = document.getElementById('sub-type').value;
+                const stage = document.getElementById('sub-stage').value;
+                const grade = document.getElementById('sub-grade').value;
+                const name = document.getElementById('sub-name').value.trim();
+                const errorDiv = document.getElementById('sub-validation-error');
+                const errors = [];
+                if(!type) errors.push('يجب اختيار نوع التعليم (تربية وتعليم / أزهر)');
+                if(!stage) errors.push('يجب اختيار المرحلة الدراسية');
+                if(!grade) errors.push('يجب اختيار الصف الدراسي');
+                if(!name) errors.push('يجب كتابة اسم المادة');
+                if(errors.length > 0) {
+                    errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle ml-1"></i>' + errors.join('<br>');
+                    errorDiv.classList.remove('hidden');
+                    return false;
+                }
+                errorDiv.classList.add('hidden');
+                return { type, stage, grade, name };
+            },
+
+            addNewSubject: () => {
+                const data = admin.validateNewSubject();
+                if(!data) return;
+                const icon = document.getElementById('sub-icon').value.trim() || 'fa-star';
+                const emoji = document.getElementById('sub-emoji').value.trim() || '📚';
+                const subjectId = 'custom_' + Date.now();
+                const path = `customSubjects/${data.stage}`;
+                database.ref(path).once('value', snap => {
+                    const arr = snap.val() || [];
+                    arr.push({ id: subjectId, name: data.name, icon: icon, emoji: emoji, grade: data.grade, type: data.type });
+                    database.ref(path).set(arr).then(() => {
+                        app.notify(`✅ تم إضافة مادة "${data.name}" بنجاح`);
+                        admin.resetSubjectForm();
+                        admin.renderSubjectsTree();
+                    });
+                });
+            },
+
+            resetSubjectForm: () => {
+                document.getElementById('sub-type').value = '';
+                document.getElementById('sub-stage').value = '';
+                document.getElementById('sub-grade').innerHTML = '<option value="">-- اختر المرحلة أولاً --</option>';
+                document.getElementById('sub-name').value = '';
+                document.getElementById('sub-icon').value = 'fa-star';
+                document.getElementById('sub-emoji').value = '📚';
+                document.getElementById('sub-icon-preview').className = 'fas fa-star';
+                document.getElementById('sub-validation-error').classList.add('hidden');
+            },
+
+            renderSubjectsTree: () => {
+                const container = document.getElementById('subjects-tree-container');
+                if(!container) return;
+                const customSubjects = admin.dbData.customSubjects || {};
+                let html = '';
+                const stageNames = { primary: 'المرحلة الابتدائية', prep: 'المرحلة الإعدادية', sec: 'المرحلة الثانوية' };
+                for(const [stage, subjects] of Object.entries(customSubjects)) {
+                    html += `<div class="mb-6"><h3 class="font-black text-lg text-fuchsia-700 mb-3"><i class="fas fa-layer-group ml-2"></i>${stageNames[stage] || stage}</h3>`;
+                    subjects.forEach((subject, index) => {
+                        const gradeLabel = subject.grade ? `الصف ${subject.grade}` : '';
+                        const typeLabel = subject.type === 'azhar' ? 'أزهر' : 'عام';
+                        html += `<div class="tree-item bg-white border rounded-2xl p-4 mb-3 shadow-sm unit-card">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2"><span class="text-2xl">${subject.emoji || '📚'}</span><h4 class="font-black text-lg">${subject.name}</h4></div>
+                                    <div class="flex gap-2 text-xs"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg">${typeLabel}</span><span class="bg-purple-100 text-purple-700 px-2 py-1 rounded-lg">${gradeLabel}</span></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="admin.manageSubjectUnits('${stage}', ${index}, '${subject.name.replace(/'/g, "\\'")}')" class="bg-fuchsia-100 text-fuchsia-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-fuchsia-200"><i class="fas fa-cubes ml-1"></i> إدارة الوحدات</button>
+                                    <button onclick="admin.deleteSubject('${stage}', ${index})" class="bg-red-50 text-red-500 px-3 py-2 rounded-xl font-bold hover:bg-red-100"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div></div>`;
+                    });
+                    html += '</div>';
+                }
+                html += `<div class="mt-8"><h3 class="font-black text-lg text-slate-600 mb-3"><i class="fas fa-book ml-2"></i>المواد الأساسية (مدمجة)</h3><p class="text-sm text-slate-400">المواد الأساسية مدمجة تلقائياً ولا تحتاج لإضافة. يمكنك إضافة مواد مخصصة من الأعلى.</p></div>`;
+                container.innerHTML = html;
+            },
+
+            manageSubjectUnits: (stage, index, subjectName) => {
+                const customSubjects = admin.dbData.customSubjects || {};
+                const subject = (customSubjects[stage] || [])[index];
+                if(!subject) return;
+                admin.currentManagedSubject = { stage, index, subjectName, subject };
+                document.getElementById('unit-management-modal').classList.remove('hidden');
+                document.getElementById('unit-modal-title').innerHTML = `<i class="fas fa-cubes ml-2"></i> إدارة وحدات: ${subjectName}`;
+                admin.renderUnitModalBody();
+            },
+
+            renderUnitModalBody: () => {
+                const subject = admin.currentManagedSubject?.subject;
+                if(!subject) return;
+                const units = subject.units || [];
+                const body = document.getElementById('unit-modal-body');
+                let html = `<div class="bg-fuchsia-50 p-4 rounded-2xl mb-4"><p class="font-bold text-fuchsia-800">📋 المادة: ${subject.name}</p><p class="text-xs text-fuchsia-600">يمكنك إضافة وتحرير الوحدات الدراسية لهذه المادة</p></div>`;
+                if(units.length > 0) {
+                    html += `<h4 class="font-black text-slate-700 mb-3">الوحدات الحالية (${units.length})</h4><div class="space-y-3 mb-6">`;
+                    units.forEach((unit, uIndex) => {
+                        html += `<div class="bg-white border rounded-2xl p-4">
+                            <div class="flex justify-between items-center mb-3"><h5 class="font-black text-indigo-700"><i class="fas fa-layer-group ml-2"></i> الوحدة ${uIndex + 1}: ${unit.name || 'بدون اسم'}</h5>
+                                <div class="flex gap-2">
+                                    <button onclick="admin.addLessonToUnit(${uIndex})" class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-lg text-xs font-bold"><i class="fas fa-plus"></i> درس</button>
+                                    <button onclick="admin.addQuizToUnit(${uIndex})" class="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold"><i class="fas fa-plus"></i> اختبار</button>
+                                    <button onclick="admin.removeUnit(${uIndex})" class="bg-red-50 text-red-500 px-3 py-1 rounded-lg text-xs font-bold"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="text-xs text-slate-500"><span><i class="fas fa-video ml-1"></i> ${unit.lessons?.length || 0} دروس</span><span class="mx-2">|</span><span><i class="fas fa-file-signature ml-1"></i> ${unit.quizzes?.length || 0} اختبارات</span></div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<p class="text-slate-400 text-center py-4">لا توجد وحدات بعد. أضف الوحدة الأولى!</p>`;
+                }
+                html += `<div class="bg-slate-50 p-5 rounded-2xl border mt-4"><h4 class="font-black text-slate-700 mb-3">إضافة وحدة جديدة</h4><div class="flex gap-3"><input id="new-unit-name" placeholder="اسم الوحدة" class="flex-1 border-2 p-3 rounded-xl font-bold"><button onclick="admin.addUnit()" class="bg-fuchsia-600 text-white px-6 py-3 rounded-xl font-black"><i class="fas fa-plus ml-1"></i> إضافة</button></div></div>`;
+                body.innerHTML = html;
+            },
+
+            addUnit: () => {
+                const name = document.getElementById('new-unit-name')?.value.trim();
+                if(!name) return app.notify('أدخل اسم الوحدة', 'error');
+                const cs = admin.currentManagedSubject;
+                if(!cs) return;
+                const path = `customSubjects/${cs.stage}`;
+                database.ref(path).once('value', snap => {
+                    const arr = snap.val() || [];
+                    if(!arr[cs.index].units) arr[cs.index].units = [];
+                    arr[cs.index].units.push({ name: name, lessons: [], quizzes: [] });
+                    database.ref(path).set(arr).then(() => {
+                        app.notify(`تم إضافة الوحدة "${name}"`);
+                        admin.currentManagedSubject.subject = arr[cs.index];
+                        admin.renderUnitModalBody();
+                        admin.renderSubjectsTree();
+                    });
+                });
+            },
+
+            removeUnit: (uIndex) => {
+                if(!confirm('حذف هذه الوحدة؟')) return;
+                const cs = admin.currentManagedSubject;
+                if(!cs) return;
+                const path = `customSubjects/${cs.stage}`;
+                database.ref(path).once('value', snap => {
+                    const arr = snap.val() || [];
+                    arr[cs.index].units.splice(uIndex, 1);
+                    database.ref(path).set(arr).then(() => {
+                        app.notify('تم حذف الوحدة');
+                        admin.currentManagedSubject.subject = arr[cs.index];
+                        admin.renderUnitModalBody();
+                    });
+                });
+            },
+
+            addLessonToUnit: (uIndex) => {
+                const cs = admin.currentManagedSubject;
+                if(!cs) return;
+                const subject = cs.subject;
+                const unit = subject.units?.[uIndex];
+                localStorage.setItem('pendingLessonContext', JSON.stringify({
+                    type: subject.type || 'public', stage: cs.stage, grade: subject.grade,
+                    subject: subject.id, unit: uIndex + 1, unitName: unit?.name || `الوحدة ${uIndex + 1}`
+                }));
+                admin.closeUnitModal();
+                admin.switchTabDirect('lessons');
+                admin.applyPendingLessonContext();
+            },
+
+            addQuizToUnit: (uIndex) => {
+                const cs = admin.currentManagedSubject;
+                if(!cs) return;
+                const subject = cs.subject;
+                const unit = subject.units?.[uIndex];
+                localStorage.setItem('pendingQuizContext', JSON.stringify({
+                    type: subject.type || 'public', stage: cs.stage, grade: subject.grade,
+                    subject: subject.id, unit: uIndex + 1, unitName: unit?.name || `الوحدة ${uIndex + 1}`
+                }));
+                admin.closeUnitModal();
+                admin.switchTabDirect('quizzes');
+                admin.applyPendingQuizContext();
+            },
+
+            applyPendingLessonContext: () => {
+                const ctx = localStorage.getItem('pendingLessonContext');
+                if(!ctx) return;
+                try {
+                    const data = JSON.parse(ctx);
+                    setTimeout(() => {
+                        const typeEl = document.getElementById('l-type');
+                        const stageEl = document.getElementById('l-stage');
+                        if(typeEl) typeEl.value = data.type || 'public';
+                        if(stageEl) { stageEl.value = data.stage; admin.updateHierarchy('l'); }
+                        setTimeout(() => {
+                            const gradeEl = document.getElementById('l-grade');
+                            const subjectEl = document.getElementById('l-subject');
+                            const unitEl = document.getElementById('l-unit');
+                            const titleEl = document.getElementById('l-form-title');
+                            if(gradeEl) gradeEl.value = data.grade;
+                            if(subjectEl) subjectEl.value = data.subject;
+                            if(unitEl) unitEl.value = data.unit;
+                            if(titleEl) titleEl.innerText = `إضافة درس - ${data.unitName}`;
+                        }, 200);
+                        localStorage.removeItem('pendingLessonContext');
+                        app.notify(`تم التحضير لإضافة درس في: ${data.unitName}`);
+                    }, 100);
+                } catch(e) { console.error(e); }
+            },
+
+            applyPendingQuizContext: () => {
+                const ctx = localStorage.getItem('pendingQuizContext');
+                if(!ctx) return;
+                try {
+                    const data = JSON.parse(ctx);
+                    setTimeout(() => {
+                        const typeEl = document.getElementById('q-type');
+                        const stageEl = document.getElementById('q-stage');
+                        if(typeEl) typeEl.value = data.type || 'public';
+                        if(stageEl) { stageEl.value = data.stage; admin.updateHierarchy('q'); }
+                        setTimeout(() => {
+                            const gradeEl = document.getElementById('q-grade');
+                            const subjectEl = document.getElementById('q-subject');
+                            const unitEl = document.getElementById('q-unit');
+                            const titleEl = document.getElementById('q-form-title');
+                            if(gradeEl) gradeEl.value = data.grade;
+                            if(subjectEl) subjectEl.value = data.subject;
+                            if(unitEl) unitEl.value = data.unit;
+                            if(titleEl) titleEl.innerText = `إنشاء اختبار - ${data.unitName}`;
+                        }, 200);
+                        localStorage.removeItem('pendingQuizContext');
+                        app.notify(`تم التحضير لإنشاء اختبار في: ${data.unitName}`);
+                    }, 100);
+                } catch(e) { console.error(e); }
+            },
+
+            deleteSubject: (stage, index) => {
+                if(!confirm('هل أنت متأكد من حذف هذه المادة؟ سيتم حذف جميع وحداتها ودروسها واختباراتها.')) return;
+                database.ref(`customSubjects/${stage}`).once('value', snap => {
+                    const arr = snap.val() || [];
+                    arr.splice(index, 1);
+                    database.ref(`customSubjects/${stage}`).set(arr).then(() => {
+                        app.notify('تم حذف المادة');
+                        admin.renderSubjectsTree();
+                    });
+                });
+            },
+
+            closeUnitModal: () => {
+                document.getElementById('unit-management-modal').classList.add('hidden');
+                admin.currentManagedSubject = null;
+            },
+
+            // ==================== LESSONS ====================
             saveLesson: () => {
                 const title = document.getElementById('l-title').value, content = document.getElementById('l-content').value;
                 if(!title) return app.notify("العنوان مطلوب", "error");
+                const imageUrl = document.getElementById('l-image-url').value.trim();
+                const imagePosition = document.getElementById('l-image-position').value;
+                if(imageUrl && !imagePosition) return app.notify("يجب اختيار مكان ظهور الصورة (أعلى/أسفل الدرس)", "error");
                 const payload = {
                     title, content,
                     type: document.getElementById('l-type').value,
@@ -497,359 +951,639 @@
                     videos: admin.tempVideos,
                     questions: admin.tempLessonQuestions,
                     isLocked: document.getElementById('l-locked').checked,
-                    isHidden: document.getElementById('l-hidden').checked
+                    isHidden: document.getElementById('l-hidden').checked,
+                    imageUrl: imageUrl || null,
+                    imagePosition: imageUrl ? imagePosition : null
                 };
-                if(admin.editLessonId) { database.ref('lessons/' + admin.editLessonId).set(payload).then(() => { app.notify("تم التحديث"); admin.resetLessonForm(); }); }
-                else { database.ref('lessons').push(payload).then(() => { app.notify("تم الحفظ"); admin.resetLessonForm(); }); }
+                if(admin.editLessonId) { 
+                    database.ref('lessons/' + admin.editLessonId).set(payload).then(() => { app.notify("تم التحديث"); admin.resetLessonForm(); }); 
+                } else { 
+                    database.ref('lessons').push(payload).then(() => { app.notify("تم الحفظ"); admin.resetLessonForm(); }); 
+                }
             },
+
             editLesson: (id) => {
                 const l = admin.dbData.lessons[id]; if(!l) return;
                 admin.editLessonId = id;
                 document.getElementById('l-type').value = l.type;
                 document.getElementById('l-stage').value = l.stage;
                 admin.updateHierarchy('l');
-                setTimeout(() => { document.getElementById('l-grade').value = l.grade; document.getElementById('l-subject').value = l.subject; }, 100);
+                setTimeout(() => { 
+                    const gradeEl = document.getElementById('l-grade');
+                    const subjectEl = document.getElementById('l-subject');
+                    if(gradeEl) gradeEl.value = l.grade; 
+                    if(subjectEl) subjectEl.value = l.subject; 
+                }, 100);
                 document.getElementById('l-unit').value = l.unit || 1;
                 document.getElementById('l-title').value = l.title;
                 document.getElementById('l-content').value = l.content || '';
                 document.getElementById('l-locked').checked = l.isLocked || false;
                 document.getElementById('l-hidden').checked = l.isHidden || false;
+                document.getElementById('l-image-url').value = l.imageUrl || '';
+                document.getElementById('l-image-position').value = l.imagePosition || '';
+                if(l.imageUrl) {
+                    document.getElementById('l-image-preview').src = l.imageUrl;
+                    document.getElementById('l-image-preview-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('l-image-preview-container').classList.add('hidden');
+                }
                 admin.tempVideos = l.videos || []; admin.renderTempVideos();
                 admin.tempLessonQuestions = l.questions || []; admin.renderTempQuestions('l');
                 document.getElementById('l-form-title').innerText = "تعديل: " + l.title;
                 document.getElementById('l-save-btn').innerHTML = "<i class='fas fa-save ml-2'></i> حفظ التحديثات";
                 window.scrollTo({top: 0, behavior: 'smooth'});
             },
+
             resetLessonForm: () => {
                 admin.editLessonId = null;
                 document.getElementById('l-title').value = '';
                 document.getElementById('l-content').value = '';
                 document.getElementById('l-locked').checked = false;
                 document.getElementById('l-hidden').checked = false;
+                document.getElementById('l-image-url').value = '';
+                document.getElementById('l-image-position').value = '';
+                document.getElementById('l-image-preview-container').classList.add('hidden');
                 admin.tempVideos = []; admin.tempLessonQuestions = [];
                 admin.renderTempVideos(); admin.renderTempQuestions('l');
                 document.getElementById('l-form-title').innerText = "إضافة درس جديد";
                 document.getElementById('l-save-btn').innerHTML = "<i class='fas fa-paper-plane ml-2'></i> حفظ الدرس";
             },
-            renderLessons: () => {
-                const l = Object.entries(admin.dbData.lessons || {}).reverse();
-                document.getElementById('lessons-list-display').innerHTML = l.map(([id, val]) => `
-                    <div class="bg-white p-5 rounded-2xl flex flex-col md:flex-row justify-between gap-4 border shadow-sm group">
-                        <div><div class="flex gap-2 mb-3"><span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md font-black">${val.type} - صف ${val.grade}</span>${val.isHidden?'<span class="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded-md"><i class="fas fa-eye-slash"></i> مخفي</span>':''}</div><h5 class="font-black text-lg">${val.title}</h5></div>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="admin.editLesson('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold hover:bg-orange-500 hover:text-white"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف؟')) database.ref('lessons/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div>
-                    </div>`).join('');
+
+            addVideoToTemp: () => {
+                const name = document.getElementById('v-teacher').value.trim(), url = document.getElementById('v-url').value.trim();
+                if(name && url) { admin.tempVideos.push({ name, url }); admin.renderTempVideos(); document.getElementById('v-teacher').value = ''; document.getElementById('v-url').value = ''; }
             },
 
-            // ------ Questions (shared for lessons and quizzes) ------
-            toggleQuestionTypeFields: (prefix) => {
-                const type = document.getElementById(`${prefix}-q-type`).value;
-                document.getElementById(`${prefix}-mcq-fields`).classList.toggle('hidden', type !== 'mcq');
-                document.getElementById(`${prefix}-ordering-fields`).classList.toggle('hidden', type !== 'ordering');
+            renderTempVideos: () => { 
+                const listEl = document.getElementById('temp-videos-list');
+                if(!listEl) return;
+                listEl.innerHTML = admin.tempVideos.map((v,i) => `<div class="bg-white p-3 rounded-xl flex justify-between text-sm"><span><i class="fas fa-video ml-2"></i>${v.name}</span><button onclick="admin.tempVideos.splice(${i},1);admin.renderTempVideos()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join(''); 
             },
+
+            renderLessons: () => {
+                const listEl = document.getElementById('lessons-list-display');
+                if(!listEl) return;
+                const l = Object.entries(admin.dbData.lessons || {}).reverse();
+                listEl.innerHTML = l.length ? l.map(([id, val]) => `
+                    <div class="bg-white p-5 rounded-2xl flex flex-col md:flex-row justify-between gap-4 border shadow-sm group">
+                        <div>
+                            <div class="flex gap-2 mb-3">
+                                <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md font-black">${val.type} - صف ${val.grade}</span>
+                                ${val.imageUrl ? '<span class="text-[10px] bg-amber-50 text-amber-600 px-2 py-1 rounded-md"><i class="fas fa-image"></i> صورة</span>' : ''}
+                                ${val.isHidden?'<span class="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded-md"><i class="fas fa-eye-slash"></i> مخفي</span>':''}
+                            </div>
+                            <h5 class="font-black text-lg">${val.title}</h5>
+                        </div>
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="admin.editLesson('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold hover:bg-orange-500 hover:text-white"><i class="fas fa-pen"></i></button>
+                            <button onclick="if(confirm('حذف؟')) database.ref('lessons/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('') : '<p class="col-span-2 text-center py-12 text-slate-400">لا توجد دروس</p>';
+            },
+
+            // ==================== QUESTIONS ====================
+            toggleQuestionTypeFields: (prefix) => {
+                const type = document.getElementById(`${prefix}-q-type`)?.value;
+                const mcqFields = document.getElementById(`${prefix}-mcq-fields`);
+                const ordFields = document.getElementById(`${prefix}-ordering-fields`);
+                if(mcqFields) mcqFields.classList.toggle('hidden', type !== 'mcq');
+                if(ordFields) ordFields.classList.toggle('hidden', type !== 'ordering');
+            },
+
             addQuestionToTemp: (prefix) => {
-                const type = document.getElementById(`${prefix}-q-type`).value;
-                const text = document.getElementById(`${prefix}-q-text`).value;
+                const typeEl = document.getElementById(`${prefix}-q-type`);
+                const textEl = document.getElementById(`${prefix}-q-text`);
+                if(!typeEl || !textEl) return;
+                const type = typeEl.value;
+                const text = textEl.value;
                 if(!text) return app.notify("اكتب نص السؤال", "error");
                 let qObj = { text, type };
                 if(type==='mcq') {
-                    const opts = [0,1,2,3].map(i => document.getElementById(`${prefix}-q-opt${i}`).value);
-                    const ans = document.getElementById(`${prefix}-q-ans`).value;
+                    const opts = [0,1,2,3].map(i => document.getElementById(`${prefix}-q-opt${i}`)?.value);
+                    const ans = document.getElementById(`${prefix}-q-ans`)?.value;
                     const idx = opts.indexOf(ans);
-                    if(idx===-1) return app.notify("الإجابة غير مطابقة", "error");
+                    if(idx===-1) return app.notify("الإجابة غير مطابقة للخيارات", "error");
                     qObj.opts = opts; qObj.correctAnswer = idx;
                 } else if(type==='ordering') {
-                    const items = document.getElementById(`${prefix}-q-order-items`).value.split('\n').filter(i=>i.trim());
+                    const itemsEl = document.getElementById(`${prefix}-q-order-items`);
+                    const items = itemsEl ? itemsEl.value.split('\n').filter(i=>i.trim()) : [];
                     if(items.length<2) return app.notify("أدخل عنصرين على الأقل", "error");
                     qObj.opts = items; qObj.orderItems = items; qObj.correctOrder = [...Array(items.length).keys()];
                 }
-                if(prefix==='l') admin.tempLessonQuestions.push(qObj); else admin.tempQuizQuestions.push(qObj);
+                if(prefix==='l') admin.tempLessonQuestions.push(qObj); 
+                else admin.tempQuizQuestions.push(qObj);
                 admin.renderTempQuestions(prefix);
-                document.getElementById(`${prefix}-q-text`).value = '';
-                if(type==='mcq') { [0,1,2,3].forEach(i=>document.getElementById(`${prefix}-q-opt${i}`).value=''); document.getElementById(`${prefix}-q-ans`).value=''; }
+                textEl.value = '';
+                if(type==='mcq') { 
+                    [0,1,2,3].forEach(i=>{ const el = document.getElementById(`${prefix}-q-opt${i}`); if(el) el.value=''; }); 
+                    const ansEl = document.getElementById(`${prefix}-q-ans`); if(ansEl) ansEl.value=''; 
+                }
             },
+
             addBulkQuestions: (prefix) => {
+                const jsonEl = document.getElementById(`${prefix}-bulk-json`);
+                if(!jsonEl) return;
                 try {
-                    const arr = JSON.parse(document.getElementById(`${prefix}-bulk-json`).value);
+                    const arr = JSON.parse(jsonEl.value);
                     (Array.isArray(arr)?arr:[arr]).forEach(q=>{if(!q.type)q.type='mcq';});
-                    if(prefix==='l') admin.tempLessonQuestions.push(...arr); else admin.tempQuizQuestions.push(...arr);
-                    admin.renderTempQuestions(prefix); document.getElementById(`${prefix}-bulk-json`).value=''; app.notify("تم الاستيراد");
+                    if(prefix==='l') admin.tempLessonQuestions.push(...arr); 
+                    else admin.tempQuizQuestions.push(...arr);
+                    admin.renderTempQuestions(prefix); jsonEl.value=''; app.notify("تم الاستيراد");
                 } catch(e) { app.notify("صيغة JSON خاطئة", "error"); }
             },
+
             renderTempQuestions: (prefix) => {
                 const arr = prefix==='l' ? admin.tempLessonQuestions : admin.tempQuizQuestions;
-                document.getElementById(`temp-${prefix}-questions-list`).innerHTML = arr.map((q,i) => `
-                    <div class="bg-white p-4 border rounded-2xl flex justify-between text-sm shadow-sm mb-3"><div><span class="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-black ml-2">${q.type==='essay'?'📝 مقالي':q.type==='ordering'?'🔢 ترتيب':'✅ MCQ'}</span><span class="font-black text-lg">${i+1}.</span> ${q.text}</div><button onclick="admin.${prefix==='l'?'tempLessonQuestions':'tempQuizQuestions'}.splice(${i},1);admin.renderTempQuestions('${prefix}')" class="text-red-400"><i class="fas fa-trash"></i></button></div>
-                `).join('');
+                const listId = `temp-${prefix}-questions-list`;
+                const listEl = document.getElementById(listId);
+                if(!listEl) return;
+                listEl.innerHTML = arr.length ? arr.map((q,i) => `
+                    <div class="bg-white p-4 border rounded-2xl flex justify-between text-sm shadow-sm mb-3">
+                        <div>
+                            <span class="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-black ml-2">${q.type==='essay'?'📝 مقالي':q.type==='ordering'?'🔢 ترتيب':'✅ MCQ'}</span>
+                            <span class="font-black text-lg">${i+1}.</span> ${q.text}
+                        </div>
+                        <button onclick="admin.temp${prefix==='l'?'Lesson':'Quiz'}Questions.splice(${i},1);admin.renderTempQuestions('${prefix}')" class="text-red-400"><i class="fas fa-trash"></i></button>
+                    </div>`).join('') : '<p class="text-slate-400 text-center py-4">لا توجد أسئلة مضافة</p>';
             },
 
-            // ------ Quizzes ------
+            // ==================== QUIZZES ====================
             saveQuiz: () => {
-                const name = document.getElementById('q-title').value; if(!name||!admin.tempQuizQuestions.length) return app.notify("الاسم والأسئلة مطلوبان", "error");
-                const payload = { name, type: document.getElementById('q-type').value, stage: document.getElementById('q-stage').value, grade: document.getElementById('q-grade').value, subject: document.getElementById('q-subject').value, unit: document.getElementById('q-unit').value, questions: admin.tempQuizQuestions, isLocked: document.getElementById('q-locked').checked, isHidden: document.getElementById('q-hidden').checked };
-                if(admin.editQuizId) { database.ref('quizzes/' + admin.editQuizId).set(payload).then(() => { app.notify("تم التحديث"); admin.resetQuizForm(); }); }
-                else { database.ref('quizzes').push(payload).then(() => { app.notify("تم الحفظ"); admin.resetQuizForm(); }); }
+                const name = document.getElementById('q-title')?.value; 
+                if(!name||!admin.tempQuizQuestions.length) return app.notify("الاسم والأسئلة مطلوبان", "error");
+                const payload = { 
+                    name, type: document.getElementById('q-type')?.value, stage: document.getElementById('q-stage')?.value, 
+                    grade: document.getElementById('q-grade')?.value, subject: document.getElementById('q-subject')?.value, 
+                    unit: document.getElementById('q-unit')?.value, questions: admin.tempQuizQuestions, 
+                    isLocked: document.getElementById('q-locked')?.checked, isHidden: document.getElementById('q-hidden')?.checked 
+                };
+                if(admin.editQuizId) { 
+                    database.ref('quizzes/' + admin.editQuizId).set(payload).then(() => { app.notify("تم التحديث"); admin.resetQuizForm(); }); 
+                } else { 
+                    database.ref('quizzes').push(payload).then(() => { app.notify("تم الحفظ"); admin.resetQuizForm(); }); 
+                }
             },
+
             editQuiz: (id) => {
                 const q = admin.dbData.quizzes[id]; if(!q) return;
-                admin.editQuizId = id; document.getElementById('q-type').value = q.type; document.getElementById('q-stage').value = q.stage; admin.updateHierarchy('q');
-                setTimeout(() => { document.getElementById('q-grade').value = q.grade; document.getElementById('q-subject').value = q.subject; }, 100);
-                document.getElementById('q-unit').value = q.unit||0; document.getElementById('q-title').value = q.name; 
-                document.getElementById('q-locked').checked = q.isLocked||false; document.getElementById('q-hidden').checked = q.isHidden||false;
+                admin.editQuizId = id; 
+                const typeEl = document.getElementById('q-type');
+                const stageEl = document.getElementById('q-stage');
+                if(typeEl) typeEl.value = q.type; 
+                if(stageEl) { stageEl.value = q.stage; admin.updateHierarchy('q'); }
+                setTimeout(() => { 
+                    const gradeEl = document.getElementById('q-grade');
+                    const subjectEl = document.getElementById('q-subject');
+                    if(gradeEl) gradeEl.value = q.grade; 
+                    if(subjectEl) subjectEl.value = q.subject; 
+                }, 100);
+                const unitEl = document.getElementById('q-unit');
+                const titleEl = document.getElementById('q-title');
+                const lockedEl = document.getElementById('q-locked');
+                const hiddenEl = document.getElementById('q-hidden');
+                if(unitEl) unitEl.value = q.unit||0; 
+                if(titleEl) titleEl.value = q.name; 
+                if(lockedEl) lockedEl.checked = q.isLocked||false; 
+                if(hiddenEl) hiddenEl.checked = q.isHidden||false;
                 admin.tempQuizQuestions = q.questions||[]; admin.renderTempQuestions('q');
-                document.getElementById('q-form-title').innerText = "تعديل: " + q.name; 
-                document.getElementById('q-save-btn').innerHTML = "<i class='fas fa-save ml-2'></i> تحديث";
+                const formTitleEl = document.getElementById('q-form-title');
+                const saveBtnEl = document.getElementById('q-save-btn');
+                if(formTitleEl) formTitleEl.innerText = "تعديل: " + q.name; 
+                if(saveBtnEl) saveBtnEl.innerHTML = "<i class='fas fa-save ml-2'></i> تحديث";
                 window.scrollTo({top:0});
             },
+
             resetQuizForm: () => {
-                admin.editQuizId = null; document.getElementById('q-title').value = ''; document.getElementById('q-locked').checked = false; document.getElementById('q-hidden').checked = false;
+                admin.editQuizId = null; 
+                const titleEl = document.getElementById('q-title');
+                const lockedEl = document.getElementById('q-locked');
+                const hiddenEl = document.getElementById('q-hidden');
+                if(titleEl) titleEl.value = ''; 
+                if(lockedEl) lockedEl.checked = false; 
+                if(hiddenEl) hiddenEl.checked = false;
                 admin.tempQuizQuestions = []; admin.renderTempQuestions('q');
-                document.getElementById('q-form-title').innerText = "إنشاء اختبار"; 
-                document.getElementById('q-save-btn').innerHTML = "<i class='fas fa-paper-plane ml-2'></i> حفظ الاختبار";
-            },
-            renderQuizzes: () => {
-                const q = Object.entries(admin.dbData.quizzes || {}).reverse();
-                document.getElementById('quizzes-list-display').innerHTML = q.map(([id, val]) => `
-                    <div class="bg-white p-5 rounded-2xl flex justify-between gap-4 border shadow-sm group">
-                        <div><span class="text-[10px] bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-black">${val.unit==0?'شامل':'الوحدة '+val.unit}</span><h5 class="font-black text-lg">${val.name}</h5></div>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100"><button onclick="admin.editQuiz('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف؟')) database.ref('quizzes/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold"><i class="fas fa-trash"></i></button></div>
-                    </div>`).join('');
+                const formTitleEl = document.getElementById('q-form-title');
+                const saveBtnEl = document.getElementById('q-save-btn');
+                if(formTitleEl) formTitleEl.innerText = "إنشاء اختبار"; 
+                if(saveBtnEl) saveBtnEl.innerHTML = "<i class='fas fa-paper-plane ml-2'></i> حفظ الاختبار";
             },
 
-            // ------ Simulations ------
-            saveSimulation: () => {
-                const name = document.getElementById('sim-name').value; if(!name) return app.notify("الاسم مطلوب", "error");
-                const payload = { name, type: document.getElementById('sim-type').value, stage: document.getElementById('sim-stage').value, grade: document.getElementById('sim-grade').value, time: document.getElementById('sim-time').value, counts: { ar: document.getElementById('sim-ar').value, ma: document.getElementById('sim-ma').value, sc: document.getElementById('sim-sc').value, en: document.getElementById('sim-en').value }, isLocked: document.getElementById('sim-locked').checked, isHidden: document.getElementById('sim-hidden').checked };
-                if(admin.editSimId) { database.ref('simulations/'+admin.editSimId).set(payload).then(()=>{app.notify("تم التحديث");admin.resetSimForm();}); }
-                else { database.ref('simulations').push(payload).then(()=>{app.notify("تم الحفظ");admin.resetSimForm();}); }
+            renderQuizzes: () => {
+                const listEl = document.getElementById('quizzes-list-display');
+                if(!listEl) return;
+                const q = Object.entries(admin.dbData.quizzes || {}).reverse();
+                listEl.innerHTML = q.length ? q.map(([id, val]) => `
+                    <div class="bg-white p-5 rounded-2xl flex justify-between gap-4 border shadow-sm group">
+                        <div>
+                            <span class="text-[10px] bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-black">${val.unit==0?'شامل':'الوحدة '+val.unit}</span>
+                            <h5 class="font-black text-lg">${val.name}</h5>
+                        </div>
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100">
+                            <button onclick="admin.editQuiz('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold"><i class="fas fa-pen"></i></button>
+                            <button onclick="if(confirm('حذف؟')) database.ref('quizzes/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('') : '<p class="col-span-2 text-center py-12 text-slate-400">لا توجد اختبارات</p>';
             },
+
+            // ==================== SIMULATIONS ====================
+            saveSimulation: () => {
+                const name = document.getElementById('sim-name')?.value; 
+                if(!name) return app.notify("الاسم مطلوب", "error");
+                const payload = { 
+                    name, type: document.getElementById('sim-type')?.value, stage: document.getElementById('sim-stage')?.value, 
+                    grade: document.getElementById('sim-grade')?.value, time: document.getElementById('sim-time')?.value, 
+                    counts: { ar: document.getElementById('sim-ar')?.value, ma: document.getElementById('sim-ma')?.value, sc: document.getElementById('sim-sc')?.value, en: document.getElementById('sim-en')?.value }, 
+                    isLocked: document.getElementById('sim-locked')?.checked, isHidden: document.getElementById('sim-hidden')?.checked 
+                };
+                if(admin.editSimId) { 
+                    database.ref('simulations/'+admin.editSimId).set(payload).then(()=>{app.notify("تم التحديث");admin.resetSimForm();}); 
+                } else { 
+                    database.ref('simulations').push(payload).then(()=>{app.notify("تم الحفظ");admin.resetSimForm();}); 
+                }
+            },
+
             editSimulation: (id) => {
                 const s = admin.dbData.simulations[id]; if(!s) return;
-                admin.editSimId = id; document.getElementById('sim-name').value = s.name; document.getElementById('sim-type').value = s.type; document.getElementById('sim-stage').value = s.stage; admin.updateHierarchy('sim');
-                setTimeout(() => { document.getElementById('sim-grade').value = s.grade; }, 100);
-                document.getElementById('sim-time').value = s.time; ['ar','ma','sc','en'].forEach(k=>document.getElementById('sim-'+k).value=s.counts[k]);
-                document.getElementById('sim-locked').checked = s.isLocked||false; document.getElementById('sim-hidden').checked = s.isHidden||false;
-                document.getElementById('sim-form-title').innerText = "تعديل: " + s.name;
+                admin.editSimId = id; 
+                const nameEl = document.getElementById('sim-name');
+                const typeEl = document.getElementById('sim-type');
+                const stageEl = document.getElementById('sim-stage');
+                if(nameEl) nameEl.value = s.name; 
+                if(typeEl) typeEl.value = s.type; 
+                if(stageEl) { stageEl.value = s.stage; admin.updateHierarchy('sim'); }
+                setTimeout(() => { const gradeEl = document.getElementById('sim-grade'); if(gradeEl) gradeEl.value = s.grade; }, 100);
+                const timeEl = document.getElementById('sim-time');
+                if(timeEl) timeEl.value = s.time; 
+                ['ar','ma','sc','en'].forEach(k=>{ const el = document.getElementById('sim-'+k); if(el) el.value=s.counts[k]; });
+                const lockedEl = document.getElementById('sim-locked');
+                const hiddenEl = document.getElementById('sim-hidden');
+                if(lockedEl) lockedEl.checked = s.isLocked||false; 
+                if(hiddenEl) hiddenEl.checked = s.isHidden||false;
+                const formTitleEl = document.getElementById('sim-form-title');
+                if(formTitleEl) formTitleEl.innerText = "تعديل: " + s.name;
                 window.scrollTo({top:0});
             },
+
             resetSimForm: () => {
-                admin.editSimId = null; document.getElementById('sim-name').value = ''; document.getElementById('sim-time').value = ''; document.getElementById('sim-locked').checked = false; document.getElementById('sim-hidden').checked = false;
-                document.getElementById('sim-form-title').innerText = "إنشاء محاكي";
-            },
-            renderSimulations: () => {
-                const s = Object.entries(admin.dbData.simulations || {}).reverse();
-                document.getElementById('simulations-list-display').innerHTML = s.map(([id, val]) => `
-                    <div class="bg-white p-5 rounded-2xl flex justify-between gap-4 border shadow-sm group">
-                        <div><h5 class="font-black text-lg">${val.name}</h5><span class="text-sm text-yellow-600">⏱️ ${val.time} دقيقة</span></div>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100"><button onclick="admin.editSimulation('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف؟')) database.ref('simulations/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold"><i class="fas fa-trash"></i></button></div>
-                    </div>`).join('');
+                admin.editSimId = null; 
+                const nameEl = document.getElementById('sim-name');
+                const timeEl = document.getElementById('sim-time');
+                const lockedEl = document.getElementById('sim-locked');
+                const hiddenEl = document.getElementById('sim-hidden');
+                if(nameEl) nameEl.value = ''; 
+                if(timeEl) timeEl.value = ''; 
+                if(lockedEl) lockedEl.checked = false; 
+                if(hiddenEl) hiddenEl.checked = false;
+                const formTitleEl = document.getElementById('sim-form-title');
+                if(formTitleEl) formTitleEl.innerText = "إنشاء محاكي";
             },
 
-            // ------ Files ------
-            saveFile: () => {
-                const title = document.getElementById('file-title').value, url = document.getElementById('file-url').value;
-                if(!title||!url) return app.notify("العنوان والرابط مطلوبان", "error");
-                const payload = { title, url, type: document.getElementById('file-type').value, stage: document.getElementById('file-stage').value, grade: document.getElementById('file-grade').value, subject: document.getElementById('file-subject').value, icon: 'fa-file-pdf', createdAt: Date.now() };
-                if(admin.editFileId) { database.ref('files/'+admin.editFileId).set(payload).then(()=>{app.notify("تم التحديث");admin.resetFileForm();}); }
-                else { database.ref('files').push(payload).then(()=>{app.notify("تم الحفظ");admin.resetFileForm();}); }
+            renderSimulations: () => {
+                const listEl = document.getElementById('simulations-list-display');
+                if(!listEl) return;
+                const s = Object.entries(admin.dbData.simulations || {}).reverse();
+                listEl.innerHTML = s.length ? s.map(([id, val]) => `
+                    <div class="bg-white p-5 rounded-2xl flex justify-between gap-4 border shadow-sm group">
+                        <div><h5 class="font-black text-lg">${val.name}</h5><span class="text-sm text-yellow-600">⏱️ ${val.time} دقيقة</span></div>
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100">
+                            <button onclick="admin.editSimulation('${id}')" class="text-orange-600 px-4 py-2 bg-orange-50 rounded-xl font-bold"><i class="fas fa-pen"></i></button>
+                            <button onclick="if(confirm('حذف؟')) database.ref('simulations/${id}').remove()" class="text-red-600 px-4 py-2 bg-red-50 rounded-xl font-bold"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('') : '<p class="col-span-2 text-center py-12 text-slate-400">لا توجد محاكيات</p>';
             },
+
+            // ==================== FILES ====================
+            saveFile: () => {
+                const title = document.getElementById('file-title')?.value, url = document.getElementById('file-url')?.value;
+                if(!title||!url) return app.notify("العنوان والرابط مطلوبان", "error");
+                const payload = { 
+                    title, url, type: document.getElementById('file-type')?.value, stage: document.getElementById('file-stage')?.value, 
+                    grade: document.getElementById('file-grade')?.value, subject: document.getElementById('file-subject')?.value, 
+                    icon: 'fa-file-pdf', createdAt: Date.now() 
+                };
+                if(admin.editFileId) { 
+                    database.ref('files/'+admin.editFileId).set(payload).then(()=>{app.notify("تم التحديث");admin.resetFileForm();}); 
+                } else { 
+                    database.ref('files').push(payload).then(()=>{app.notify("تم الحفظ");admin.resetFileForm();}); 
+                }
+            },
+
             editFile: (id) => {
                 const f = admin.dbData.files[id]; if(!f) return;
                 admin.editFileId = id;
-                document.getElementById('file-title').value = f.title; document.getElementById('file-url').value = f.url; document.getElementById('file-type').value = f.type; document.getElementById('file-stage').value = f.stage; document.getElementById('file-grade').value = f.grade; document.getElementById('file-subject').value = f.subject || '';
-                document.getElementById('file-form-title').innerText = "تعديل ملف"; document.getElementById('file-save-btn').innerText = "تحديث الملف";
+                const titleEl = document.getElementById('file-title');
+                const urlEl = document.getElementById('file-url');
+                const typeEl = document.getElementById('file-type');
+                const stageEl = document.getElementById('file-stage');
+                const gradeEl = document.getElementById('file-grade');
+                const subjectEl = document.getElementById('file-subject');
+                if(titleEl) titleEl.value = f.title; 
+                if(urlEl) urlEl.value = f.url; 
+                if(typeEl) typeEl.value = f.type; 
+                if(stageEl) stageEl.value = f.stage; 
+                if(gradeEl) gradeEl.value = f.grade; 
+                if(subjectEl) subjectEl.value = f.subject || '';
+                const formTitleEl = document.getElementById('file-form-title');
+                const saveBtnEl = document.getElementById('file-save-btn');
+                if(formTitleEl) formTitleEl.innerText = "تعديل ملف"; 
+                if(saveBtnEl) saveBtnEl.innerText = "تحديث الملف";
                 window.scrollTo({top:0});
             },
-            resetFileForm: () => { admin.editFileId = null; document.getElementById('file-title').value = ''; document.getElementById('file-url').value = ''; document.getElementById('file-subject').value = ''; document.getElementById('file-form-title').innerText = "إضافة ملف جديد"; document.getElementById('file-save-btn').innerText = "حفظ الملف"; },
+
+            resetFileForm: () => { 
+                admin.editFileId = null; 
+                const titleEl = document.getElementById('file-title');
+                const urlEl = document.getElementById('file-url');
+                const subjectEl = document.getElementById('file-subject');
+                if(titleEl) titleEl.value = ''; 
+                if(urlEl) urlEl.value = ''; 
+                if(subjectEl) subjectEl.value = ''; 
+                const formTitleEl = document.getElementById('file-form-title');
+                const saveBtnEl = document.getElementById('file-save-btn');
+                if(formTitleEl) formTitleEl.innerText = "إضافة ملف جديد"; 
+                if(saveBtnEl) saveBtnEl.innerText = "حفظ الملف"; 
+            },
+
             renderFilesMgmt: () => {
+                const listEl = document.getElementById('files-mgmt-list');
+                if(!listEl) return;
                 const files = Object.entries(admin.dbData.files || {}).reverse();
-                document.getElementById('files-mgmt-list').innerHTML = files.length ? files.map(([id, f]) => `
+                listEl.innerHTML = files.length ? files.map(([id, f]) => `
                     <div class="bg-white p-5 rounded-2xl border flex justify-between items-center shadow-sm">
                         <div><h5 class="font-black text-slate-800">${f.title}</h5><p class="text-xs text-slate-400">${f.type} - ${f.stage} - صف ${f.grade} ${f.subject?'- '+f.subject:''}</p></div>
-                        <div class="flex gap-2"><button onclick="admin.editFile('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف الملف؟')) database.ref('files/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs"><i class="fas fa-trash"></i></button></div>
+                        <div class="flex gap-2">
+                            <button onclick="admin.editFile('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs"><i class="fas fa-pen"></i></button>
+                            <button onclick="if(confirm('حذف الملف؟')) database.ref('files/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد ملفات</p>';
             },
 
-            // ------ Custom Subjects ------
-            addCustomSubject: () => {
-                const stage = document.getElementById('custom-stage').value;
-                const name = document.getElementById('custom-name').value.trim();
-                const icon = document.getElementById('custom-icon').value.trim() || 'fa-star';
-                if(!name) return app.notify("أدخل اسم المادة", "error");
-                const id = 'custom_' + Date.now();
-                database.ref(`customSubjects/${stage}`).once('value', snap => {
-                    const arr = snap.val() || [];
-                    arr.push({ id, name, icon, emoji: '⭐' });
-                    database.ref(`customSubjects/${stage}`).set(arr).then(() => {
-                        app.notify("تمت إضافة المادة");
-                        document.getElementById('custom-name').value = '';
-                        admin.renderCustomSubjects();
-                    });
-                });
-            },
-            renderCustomSubjects: () => {
-                const all = admin.dbData.customSubjects || {};
-                const container = document.getElementById('custom-subjects-list');
-                let html = '';
-                for(const [stage, subs] of Object.entries(all)) {
-                    html += `<h5 class="font-black text-indigo-600 mt-4">${stage==='primary'?'ابتدائي':stage==='prep'?'إعدادي':'ثانوي'}</h5>`;
-                    subs.forEach((s, i) => { html += `<div class="bg-white p-4 rounded-2xl border flex justify-between items-center"><span><i class="fas ${s.icon} ml-2"></i> ${s.name}</span><button onclick="admin.removeCustomSubject('${stage}', ${i})" class="text-red-500"><i class="fas fa-trash"></i></button></div>`; });
-                }
-                container.innerHTML = html || '<p class="text-slate-400 text-center py-8">لا توجد مواد مخصصة</p>';
-            },
-            removeCustomSubject: (stage, index) => {
-                database.ref(`customSubjects/${stage}`).once('value', snap => {
-                    const arr = snap.val() || [];
-                    arr.splice(index, 1);
-                    database.ref(`customSubjects/${stage}`).set(arr).then(() => admin.renderCustomSubjects());
-                });
+            // ==================== AI ====================
+            generateAILesson: async () => {
+                const topic = document.getElementById('l-title')?.value; 
+                if(!topic) return app.notify("اكتب عنوان الدرس أولاً", "error");
+                const btn = document.getElementById('btn-ai-lesson'); 
+                if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...'; btn.disabled = true; }
+                try {
+                    const prompt = `اكتب شرحاً تعليمياً مفصلاً حول: ${topic}. استخدم التنسيق: # للعناوين، ## للعناوين الفرعية، ** لنص مهم، :::info للتنبيهات، :::warning للتحذيرات، - للقوائم.`;
+                    const contentEl = document.getElementById('l-content');
+                    if(contentEl) contentEl.value = await aiHelper.generate(prompt);
+                    app.notify("تم التوليد");
+                } catch(e) { alert(e.message); }
+                if(btn) { btn.innerHTML = '<i class="fas fa-magic"></i> توليد AI'; btn.disabled = false; }
             },
 
-            // ------ Leaderboard ------
-            resetLeaderboard: (period) => { if(confirm('مسح '+period+'؟')) database.ref('leaderboard/'+period).set({}).then(()=>app.notify("تم المسح")); },
-            renderLeaderboardMgmt: () => {
-                const profiles = Object.entries(admin.dbData.studentProfiles||{}).sort((a,b)=>(b[1].totalXP||0)-(a[1].totalXP||0));
-                document.getElementById('students-profiles-list').innerHTML = profiles.length ? profiles.map(([name,data],i)=>`<div class="bg-white p-5 rounded-2xl border flex justify-between"><div><span class="text-2xl font-black ml-4">${i+1}</span>${name} - مستوى ${data.level||1} | ${data.totalXP||0} XP</div><button onclick="if(confirm('حذف؟')) database.ref('studentProfiles/${name}').remove()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد بيانات</p>';
+            generateAILessonQuestions: async () => {
+                const topic = document.getElementById('l-title')?.value, count = document.getElementById('l-ai-q-count')?.value || 5;
+                if(!topic) return app.notify("اكتب عنوان الدرس", "error");
+                const btn = document.getElementById('btn-ai-l-quiz'); 
+                if(btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true; }
+                try {
+                    const res = await aiHelper.generate(`قم بإنشاء ${count} أسئلة اختيار من متعدد حول: ${topic}. أعد الإجابة بصيغة JSON array: [{"text":"السؤال","opts":["أ","ب","ج","د"],"correctAnswer":0,"type":"mcq"}]`);
+                    admin.tempLessonQuestions.push(...JSON.parse(res.replace(/```json/gi,'').replace(/```/g,'').trim())); 
+                    admin.renderTempQuestions('l'); app.notify("تم التوليد");
+                } catch(e) { alert(e.message); }
+                if(btn) { btn.innerHTML = '<i class="fas fa-robot"></i> توليد'; btn.disabled = false; }
             },
 
-            // ------ Live Sessions ------
-            saveLiveSession: () => {
-                const title = document.getElementById('session-title').value; if(!title) return app.notify("العنوان مطلوب","error");
-                const payload = { title, teacher: document.getElementById('session-teacher').value||'غير محدد', status: document.getElementById('session-status').value, scheduledTime: document.getElementById('session-time').value?new Date(document.getElementById('session-time').value).getTime():Date.now(), duration: parseInt(document.getElementById('session-duration').value)||60, youtubeLiveUrl: document.getElementById('session-youtube').value, zoomLink: document.getElementById('session-zoom').value };
-                if(admin.editSessionId) { database.ref('liveSessions/'+admin.editSessionId).set(payload).then(()=>{app.notify("تم التحديث");admin.resetSessionForm();}); }
-                else { database.ref('liveSessions').push(payload).then(()=>{app.notify("تم الحفظ");admin.resetSessionForm();}); }
-            },
-            editLiveSession: (id) => {
-                const s = admin.dbData.liveSessions[id]; if(!s) return;
-                admin.editSessionId = id;
-                document.getElementById('session-title').value = s.title; document.getElementById('session-teacher').value = s.teacher; document.getElementById('session-status').value = s.status; document.getElementById('session-duration').value = s.duration; document.getElementById('session-youtube').value = s.youtubeLiveUrl||''; document.getElementById('session-zoom').value = s.zoomLink||'';
-                if(s.scheduledTime) document.getElementById('session-time').value = new Date(s.scheduledTime).toISOString().slice(0,16);
-                document.getElementById('session-form-title').innerText = "تعديل: "+s.title; document.getElementById('session-save-btn').innerText = "تحديث";
-                window.scrollTo({top:0});
-            },
-            resetSessionForm: () => {
-                admin.editSessionId = null;
-                document.getElementById('session-title').value = ''; document.getElementById('session-teacher').value = ''; document.getElementById('session-status').value = 'upcoming'; document.getElementById('session-time').value = ''; document.getElementById('session-duration').value = '60'; document.getElementById('session-youtube').value = ''; document.getElementById('session-zoom').value = '';
-                document.getElementById('session-form-title').innerText = "إضافة جلسة"; document.getElementById('session-save-btn').innerText = "حفظ الجلسة";
-            },
-            renderLiveSessionsMgmt: () => {
-                const sessions = Object.entries(admin.dbData.liveSessions||{}).reverse();
-                document.getElementById('sessions-mgmt-list').innerHTML = sessions.length ? sessions.map(([id,s])=>`<div class="bg-white p-5 rounded-2xl border"><div class="flex justify-between"><h5 class="font-black">${s.title}</h5><span class="text-xs font-black px-3 py-1 rounded-full ${s.status==='live'?'bg-red-100 text-red-600':s.status==='upcoming'?'bg-blue-100 text-blue-600':'bg-slate-100'}">${s.status==='live'?'🔴 مباشر':s.status==='upcoming'?'📅 قادم':'✅ منتهي'}</span></div><div class="flex gap-2 mt-3"><button onclick="admin.editLiveSession('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف؟')) database.ref('liveSessions/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs"><i class="fas fa-trash"></i></button></div></div>`).join('') : '<p class="col-span-2 text-center py-8 text-slate-400">لا توجد جلسات</p>';
-            },
-
-            // ------ Community ------
-            renderCommunityMgmt: () => {
-                const forums = Object.entries(admin.dbData.community?.forums||{}).reverse();
-                document.getElementById('forums-mgmt-list').innerHTML = forums.length ? forums.map(([id,post])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between"><div><h5 class="font-black">${post.title}</h5><p class="text-xs">${post.author} | ❤️ ${post.likes||0}</p></div><button onclick="if(confirm('حذف؟')) database.ref('community/forums/${id}').remove()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد منشورات</p>';
-                const groups = Object.entries(admin.dbData.community?.studyGroups||{});
-                document.getElementById('groups-mgmt-list').innerHTML = groups.length ? groups.map(([id,g])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between"><h5 class="font-black">${g.name}</h5><button onclick="if(confirm('حذف؟')) database.ref('community/studyGroups/${id}').remove()" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد مجموعات</p>';
-            },
-            createStudyGroup: () => {
-                const name = prompt("اسم المجموعة:"); if(!name) return;
-                database.ref('community/studyGroups').push({name, members:[], createdBy:'admin', createdAt:Date.now()}).then(()=>app.notify("تم الإنشاء"));
-            },
-
-            // ------ Users, Posts, Announcements ------
+            // ==================== USERS ====================
             addUser: () => { 
-                const u = document.getElementById('new-user-name').value, p = document.getElementById('new-user-pass').value, d = document.getElementById('new-user-duration').value; 
+                const u = document.getElementById('new-user-name')?.value, p = document.getElementById('new-user-pass')?.value, d = document.getElementById('new-user-duration')?.value; 
                 if(!u||!p) return app.notify("أكمل البيانات","error"); 
                 database.ref('users').orderByChild('username').equalTo(u).once('value',snap=>{
                     if(snap.exists()) return app.notify("الاسم موجود","error");
-                    database.ref('users').push({username:u,pass:p,expiry:Date.now()+(d*86400000),isActive:true}).then(()=>{app.notify("تمت الإضافة");document.getElementById('new-user-name').value='';document.getElementById('new-user-pass').value='';});
+                    database.ref('users').push({username:u,pass:p,expiry:Date.now()+(d*86400000),isActive:true}).then(()=>{
+                        app.notify("تمت الإضافة");
+                        const nameEl = document.getElementById('new-user-name');
+                        const passEl = document.getElementById('new-user-pass');
+                        if(nameEl) nameEl.value=''; if(passEl) passEl.value='';
+                    });
                 });
             },
+
             renderUsers: () => { 
+                const tbody = document.getElementById('users-list-body');
+                if(!tbody) return;
                 const u = Object.entries(admin.dbData.users||{}).reverse(); 
-                document.getElementById('users-list-body').innerHTML = u.map(([id,val])=>{
+                tbody.innerHTML = u.length ? u.map(([id,val])=>{
                     const daysLeft = Math.ceil((val.expiry-Date.now())/86400000);
                     const isExp = daysLeft<=0;
                     return `<tr class="border-b hover:bg-slate-50"><td class="p-4"><span class="${val.isActive?(isExp?'bg-orange-100 text-orange-600':'bg-emerald-100 text-emerald-600'):'bg-red-100 text-red-600'} px-3 py-1.5 rounded-lg text-xs font-black">${!val.isActive?'موقوف':isExp?'منتهي':'نشط'}</span></td><td class="p-4 font-black">${val.username}</td><td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded">${val.pass}</span></td><td class="p-4 ${isExp?'text-red-500':''}">${isExp?'انتهى':'باقي '+daysLeft+' يوم'}</td><td class="p-4 text-center"><button onclick="database.ref('users/${id}/isActive').set(${!val.isActive})" class="${val.isActive?'text-amber-600 bg-amber-50':'text-emerald-600 bg-emerald-50'} p-2.5 rounded-xl mx-1"><i class="fas ${val.isActive?'fa-pause':'fa-play'}"></i></button><button onclick="if(confirm('حذف؟')) database.ref('users/${id}').remove()" class="text-red-600 bg-red-50 p-2.5 rounded-xl"><i class="fas fa-trash"></i></button></td></tr>`;
-                }).join(''); 
+                }).join('') : '<tr><td colspan="5" class="text-center py-12 text-slate-400">لا يوجد طلاب</td></tr>'; 
             },
-            addPost: () => { 
-                const t=document.getElementById('post-title').value,c=document.getElementById('post-content').value; 
-                if(t) database.ref('posts').push({title:t,content:c,image:document.getElementById('post-image').value,date:Date.now()}).then(()=>{app.notify("تم النشر");document.getElementById('post-title').value='';document.getElementById('post-content').value='';}); 
-            },
-            renderPosts: () => { 
-                const p = Object.entries(admin.dbData.posts||{}).reverse(); 
-                document.getElementById('posts-list-display').innerHTML = p.map(([id,val])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between group"><div><b>${val.title}</b></div><button onclick="if(confirm('حذف؟')) database.ref('posts/${id}').remove()" class="text-red-500 opacity-0 group-hover:opacity-100"><i class="fas fa-trash"></i></button></div>`).join(''); 
-            },
-            saveAnnouncement: () => { database.ref('announcements').set({text:document.getElementById('ann-text').value,isActive:document.getElementById('ann-active').checked,expiry:Date.now()+(document.getElementById('ann-expiry').value*86400000)}).then(()=>app.notify("تم الحفظ")); },
 
-            // ------ Visibility ------
+            // ==================== POSTS ====================
+            addPost: () => { 
+                const t=document.getElementById('post-title')?.value, c=document.getElementById('post-content')?.value, img=document.getElementById('post-image')?.value; 
+                if(t) database.ref('posts').push({title:t,content:c,image:img,date:Date.now()}).then(()=>{
+                    app.notify("تم النشر");
+                    const titleEl = document.getElementById('post-title');
+                    const contentEl = document.getElementById('post-content');
+                    const imageEl = document.getElementById('post-image');
+                    if(titleEl) titleEl.value=''; if(contentEl) contentEl.value=''; if(imageEl) imageEl.value='';
+                }); 
+            },
+
+            renderPosts: () => { 
+                const listEl = document.getElementById('posts-list-display');
+                if(!listEl) return;
+                const p = Object.entries(admin.dbData.posts||{}).reverse(); 
+                listEl.innerHTML = p.length ? p.map(([id,val])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between group"><div><b>${val.title}</b><p class="text-xs text-slate-400 mt-1">${val.content?.substring(0,80)}...</p></div><button onclick="if(confirm('حذف؟')) database.ref('posts/${id}').remove()" class="text-red-500 opacity-0 group-hover:opacity-100"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="col-span-2 text-center py-12 text-slate-400">لا توجد أخبار</p>'; 
+            },
+
+            // ==================== ANNOUNCEMENTS ====================
+            saveAnnouncement: () => { 
+                const text = document.getElementById('ann-text')?.value;
+                const isActive = document.getElementById('ann-active')?.checked;
+                const expiryDays = document.getElementById('ann-expiry')?.value || 3;
+                database.ref('announcements').set({
+                    text: text, isActive: isActive,
+                    expiry: Date.now() + (expiryDays * 86400000)
+                }).then(()=>app.notify("تم الحفظ")); 
+            },
+
+            // ==================== VISIBILITY ====================
             updateVisHierarchy: () => {
-                const stage = document.getElementById('vis-stage').value;
+                const stage = document.getElementById('vis-stage')?.value;
                 const gradeSelect = document.getElementById('vis-grade');
                 const subjectSelect = document.getElementById('vis-subject');
+                if(!gradeSelect || !subjectSelect) return;
                 let gradeHtml = stage === 'primary' ? '<option value="4">الرابع</option><option value="5">الخامس</option><option value="6">السادس</option>' :
                            stage === 'prep' ? '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>' :
                            '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>';
                 gradeSelect.innerHTML = gradeHtml;
                 const subs = subjectMapping[stage] || [];
-                subjectSelect.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                const customSubs = (admin.dbData.customSubjects && admin.dbData.customSubjects[stage]) || [];
+                const allSubs = [...subs, ...customSubs.map(c => ({id: c.id, name: c.name}))];
+                subjectSelect.innerHTML = allSubs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
             },
+
             toggleVisibility: (level) => {
-                const type = document.getElementById('vis-type').value, stage = document.getElementById('vis-stage').value, grade = document.getElementById('vis-grade').value, subject = document.getElementById('vis-subject').value;
+                const type = document.getElementById('vis-type')?.value, stage = document.getElementById('vis-stage')?.value, 
+                      grade = document.getElementById('vis-grade')?.value, subject = document.getElementById('vis-subject')?.value;
                 let key = "";
                 if(level==='type') key = `type_${type}`;
                 else if(level==='stage') key = `stage_${type}_${stage}`;
                 else if(level==='grade') key = `grade_${type}_${stage}_${grade}`;
                 else if(level==='subject') key = `subject_${type}_${stage}_${grade}_${subject}`;
-                const cur = (admin.dbData.settings?.visibility && admin.dbData.settings.visibility[key] === false) ? false : true;
+                const vis = admin.dbData.settings?.visibility || {};
+                const cur = vis[key] !== false;
                 database.ref(`settings/visibility/${key}`).set(!cur).then(()=>app.notify(!cur?"تم الإظهار":"تم الإخفاء"));
             },
+
             renderHiddenList: () => {
+                const list = document.getElementById('hidden-items-list');
+                if(!list) return;
                 const vis = admin.dbData.settings?.visibility || {};
                 const hiddenKeys = Object.keys(vis).filter(k => vis[k] === false);
-                const list = document.getElementById('hidden-items-list');
                 if(!hiddenKeys.length) { list.innerHTML = '<p class="text-slate-400 font-bold p-4 bg-slate-50 rounded-xl text-center">لا يوجد عناصر مخفية</p>'; return; }
                 list.innerHTML = hiddenKeys.map(k => `<div class="bg-red-50 p-4 rounded-xl flex justify-between"><span class="font-black text-red-900 text-sm">${k}</span><button onclick="database.ref('settings/visibility/${k}').set(true)" class="bg-white text-emerald-600 px-3 py-1 rounded-lg font-bold text-xs">إظهار</button></div>`).join('');
             },
 
-            // ------ Settings ------
+            // ==================== SETTINGS ====================
             fetchModels: async () => {
-                const key = document.getElementById('set-api-key').value; if(!key) return alert('ضع مفتاح API');
+                const key = document.getElementById('set-api-key')?.value; if(!key) return alert('ضع مفتاح API');
                 try {
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
                     const data = await res.json();
                     const valid = data.models.filter(m => m.supportedGenerationMethods?.includes("generateContent"));
-                    document.getElementById('set-ai-model').innerHTML = valid.map(m => `<option value="${m.name.replace('models/', '')}">${m.name.replace('models/', '')}</option>`).join('');
+                    const modelEl = document.getElementById('set-ai-model');
+                    if(modelEl) modelEl.innerHTML = valid.map(m => `<option value="${m.name.replace('models/', '')}">${m.name.replace('models/', '')}</option>`).join('');
                     app.notify("تم جلب النماذج");
                 } catch(e) { alert(e.message); }
             },
+
             saveSettings: () => { 
-                database.ref('settings').update({ 
-                    siteName: document.getElementById('set-site-name').value, 
-                    whatsapp: document.getElementById('set-whatsapp').value, 
-                    siteLogo: document.getElementById('set-site-logo').value,
-                    apiKey: document.getElementById('set-api-key').value, 
-                    aiModel: document.getElementById('set-ai-model').value,
-                    aboutText: document.getElementById('set-about').value,
-                    termsText: document.getElementById('set-terms').value,
-                    privacyText: document.getElementById('set-privacy').value,
+                const payload = {
+                    siteName: document.getElementById('set-site-name')?.value,
+                    whatsapp: document.getElementById('set-whatsapp')?.value,
+                    siteLogo: document.getElementById('set-site-logo')?.value,
+                    apiKey: document.getElementById('set-api-key')?.value,
+                    aiModel: document.getElementById('set-ai-model')?.value,
+                    aboutText: document.getElementById('set-about')?.value,
+                    termsText: document.getElementById('set-terms')?.value,
+                    privacyText: document.getElementById('set-privacy')?.value,
                     socialLinks: {
-                        facebook: document.getElementById('set-fb').value,
-                        youtube: document.getElementById('set-yt').value,
-                        whatsapp: document.getElementById('set-wa').value
+                        facebook: document.getElementById('set-fb')?.value,
+                        youtube: document.getElementById('set-yt')?.value,
+                        whatsapp: document.getElementById('set-wa')?.value
                     }
-                }).then(()=>app.notify("تم حفظ الإعدادات")); 
+                };
+                database.ref('settings').update(payload).then(()=>app.notify("تم حفظ الإعدادات")); 
             },
 
+            // ==================== HIERARCHY ====================
             updateHierarchy: (prefix) => {
-                const stage = document.getElementById(`${prefix}-stage`).value;
+                const stageEl = document.getElementById(`${prefix}-stage`);
                 const gradeSelect = document.getElementById(`${prefix}-grade`);
                 const subjectSelect = document.getElementById(`${prefix}-subject`);
+                if(!stageEl || !gradeSelect) return;
+                const stage = stageEl.value;
                 let gradeHtml = stage === 'primary' ? '<option value="4">الصف الرابع</option><option value="5">الخامس</option><option value="6">السادس</option>' :
                            stage === 'prep' ? '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>' :
                            '<option value="1">الأول</option><option value="2">الثاني</option><option value="3">الثالث</option>';
                 gradeSelect.innerHTML = gradeHtml;
                 if(subjectSelect) {
                     const subs = subjectMapping[stage] || [];
-                    subjectSelect.innerHTML = subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                    const customSubs = (admin.dbData.customSubjects && admin.dbData.customSubjects[stage]) || [];
+                    const allSubs = [...subs, ...customSubs.map(c => ({id: c.id, name: c.name}))];
+                    subjectSelect.innerHTML = allSubs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
                 }
+            },
+
+            // ==================== LEADERBOARD ====================
+            resetLeaderboard: (period) => { 
+                if(confirm('مسح '+period+'؟')) database.ref('leaderboard/'+period).set({}).then(()=>app.notify("تم المسح")); 
+            },
+
+            renderLeaderboardMgmt: () => {
+                const listEl = document.getElementById('students-profiles-list');
+                if(!listEl) return;
+                const profiles = Object.entries(admin.dbData.studentProfiles||{}).sort((a,b)=>(b[1].totalXP||0)-(a[1].totalXP||0));
+                listEl.innerHTML = profiles.length ? profiles.map(([name,data],i)=>`<div class="bg-white p-5 rounded-2xl border flex justify-between items-center"><div><span class="text-2xl font-black ml-4">${i+1}</span><span class="font-black">${name}</span> <span class="text-xs text-slate-400">مستوى ${data.level||1}</span></div><div class="flex items-center gap-3"><span class="font-black text-indigo-600">${data.totalXP||0} XP</span><button onclick="if(confirm('حذف؟')) database.ref('studentProfiles/${name}').remove()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg"><i class="fas fa-trash"></i></button></div></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد بيانات طلاب</p>';
+            },
+
+            // ==================== LIVE SESSIONS ====================
+            saveLiveSession: () => {
+                const title = document.getElementById('session-title')?.value; if(!title) return app.notify("العنوان مطلوب","error");
+                const payload = { 
+                    title, teacher: document.getElementById('session-teacher')?.value||'غير محدد', status: document.getElementById('session-status')?.value, 
+                    scheduledTime: document.getElementById('session-time')?.value?new Date(document.getElementById('session-time').value).getTime():Date.now(), 
+                    duration: parseInt(document.getElementById('session-duration')?.value)||60, 
+                    youtubeLiveUrl: document.getElementById('session-youtube')?.value, zoomLink: document.getElementById('session-zoom')?.value 
+                };
+                if(admin.editSessionId) { 
+                    database.ref('liveSessions/'+admin.editSessionId).set(payload).then(()=>{app.notify("تم التحديث");admin.resetSessionForm();}); 
+                } else { 
+                    database.ref('liveSessions').push(payload).then(()=>{app.notify("تم الحفظ");admin.resetSessionForm();}); 
+                }
+            },
+
+            editLiveSession: (id) => {
+                const s = admin.dbData.liveSessions?.[id]; if(!s) return;
+                admin.editSessionId = id;
+                document.getElementById('session-title').value = s.title; 
+                document.getElementById('session-teacher').value = s.teacher; 
+                document.getElementById('session-status').value = s.status; 
+                document.getElementById('session-duration').value = s.duration; 
+                document.getElementById('session-youtube').value = s.youtubeLiveUrl||''; 
+                document.getElementById('session-zoom').value = s.zoomLink||'';
+                if(s.scheduledTime) document.getElementById('session-time').value = new Date(s.scheduledTime).toISOString().slice(0,16);
+                document.getElementById('session-form-title').innerText = "تعديل: "+s.title; 
+                document.getElementById('session-save-btn').innerText = "تحديث";
+                window.scrollTo({top:0});
+            },
+
+            resetSessionForm: () => {
+                admin.editSessionId = null;
+                document.getElementById('session-title').value = ''; document.getElementById('session-teacher').value = ''; 
+                document.getElementById('session-status').value = 'upcoming'; document.getElementById('session-time').value = ''; 
+                document.getElementById('session-duration').value = '60'; document.getElementById('session-youtube').value = ''; 
+                document.getElementById('session-zoom').value = '';
+                document.getElementById('session-form-title').innerText = "إضافة جلسة"; 
+                document.getElementById('session-save-btn').innerText = "حفظ الجلسة";
+            },
+
+            renderLiveSessionsMgmt: () => {
+                const listEl = document.getElementById('sessions-mgmt-list');
+                if(!listEl) return;
+                const sessions = Object.entries(admin.dbData.liveSessions||{}).reverse();
+                listEl.innerHTML = sessions.length ? sessions.map(([id,s])=>`<div class="bg-white p-5 rounded-2xl border"><div class="flex justify-between"><h5 class="font-black">${s.title}</h5><span class="text-xs font-black px-3 py-1 rounded-full ${s.status==='live'?'bg-red-100 text-red-600':s.status==='upcoming'?'bg-blue-100 text-blue-600':'bg-slate-100'}">${s.status==='live'?'🔴 مباشر':s.status==='upcoming'?'📅 قادم':'✅ منتهي'}</span></div><div class="flex gap-2 mt-3"><button onclick="admin.editLiveSession('${id}')" class="text-orange-600 px-3 py-1.5 bg-orange-50 rounded-lg font-bold text-xs"><i class="fas fa-pen"></i></button><button onclick="if(confirm('حذف؟')) database.ref('liveSessions/${id}').remove()" class="text-red-600 px-3 py-1.5 bg-red-50 rounded-lg font-bold text-xs"><i class="fas fa-trash"></i></button></div></div>`).join('') : '<p class="col-span-2 text-center py-8 text-slate-400">لا توجد جلسات</p>';
+            },
+
+            // ==================== COMMUNITY ====================
+            renderCommunityMgmt: () => {
+                const forumsEl = document.getElementById('forums-mgmt-list');
+                if(forumsEl) {
+                    const forums = Object.entries(admin.dbData.community?.forums||{}).reverse();
+                    forumsEl.innerHTML = forums.length ? forums.map(([id,post])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between"><div><h5 class="font-black">${post.title}</h5><p class="text-xs text-slate-400">${post.author} | ❤️ ${post.likes||0} | 💬 ${Object.keys(post.comments||{}).length}</p></div><button onclick="if(confirm('حذف؟')) database.ref('community/forums/${id}').remove()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد منشورات</p>';
+                }
+                const groupsEl = document.getElementById('groups-mgmt-list');
+                if(groupsEl) {
+                    const groups = Object.entries(admin.dbData.community?.studyGroups||{});
+                    groupsEl.innerHTML = groups.length ? groups.map(([id,g])=>`<div class="bg-white p-5 rounded-2xl border flex justify-between items-center"><div><h5 class="font-black">${g.name}</h5><p class="text-xs text-slate-400">${g.members?.length||0} أعضاء</p></div><button onclick="if(confirm('حذف؟')) database.ref('community/studyGroups/${id}').remove()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg"><i class="fas fa-trash"></i></button></div>`).join('') : '<p class="text-slate-400 text-center py-8">لا توجد مجموعات</p>';
+                }
+            },
+
+            createStudyGroup: () => {
+                const name = prompt("اسم المجموعة:"); if(!name) return;
+                database.ref('community/studyGroups').push({name,members:[],createdBy:'admin',createdAt:Date.now()}).then(()=>app.notify("تم الإنشاء"));
             }
         };
 
+        // ==================== INIT & MODAL HANDLERS ====================
         admin.init();
+        
+        document.getElementById('unit-management-modal')?.addEventListener('click', function(e) {
+            if(e.target === this) admin.closeUnitModal();
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'Escape') {
+                const modal = document.getElementById('unit-management-modal');
+                if(modal && !modal.classList.contains('hidden')) admin.closeUnitModal();
+            }
+        });
     </script> 
 </body>
 </html>
