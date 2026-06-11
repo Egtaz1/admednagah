@@ -514,34 +514,70 @@
             dbData: {},
             currentManagedSubject: null,
 
-            // ==================== إصلاح هيكل customSubjects ====================
+            // ==================== إصلاح هيكل customSubjects (المحسّن) ====================
             fixCustomSubjectsStructure: () => {
                 const ref = database.ref('customSubjects');
                 ref.once('value', snap => {
-                    const val = snap.val();
+                    const val = snap.val() || {};
                     const newStructure = { primary: {}, prep: {}, sec: {} };
-                    if (val === null) { ref.set(newStructure); return; }
-                    if (Array.isArray(val)) { ref.set(newStructure); return; }
-                    if (typeof val === 'object') {
-                        let needsUpdate = false;
-                        ['primary', 'prep', 'sec'].forEach(stage => {
-                            if (!val[stage]) { val[stage] = {}; needsUpdate = true; }
-                            else if (Array.isArray(val[stage])) {
-                                const gradeObj = {};
-                                val[stage].forEach((item, idx) => { gradeObj[idx+1] = [item]; });
-                                val[stage] = gradeObj;
+                    
+                    if (val === null || typeof val !== 'object' || Array.isArray(val)) {
+                        ref.set(newStructure);
+                        return;
+                    }
+                    
+                    let needsUpdate = false;
+                    
+                    ['primary', 'prep', 'sec'].forEach(stage => {
+                        // تأكد من وجود المرحلة
+                        if (!val[stage] || typeof val[stage] !== 'object' || Array.isArray(val[stage])) {
+                            val[stage] = {};
+                            needsUpdate = true;
+                        }
+                        
+                        // تأكد من وجود جميع الصفوف بالمفاتيح الرقمية الصحيحة
+                        const grades = stage === 'primary' ? [4, 5, 6] : [1, 2, 3];
+                        grades.forEach(grade => {
+                            const key = String(grade);
+                            if (!Array.isArray(val[stage][key])) {
+                                val[stage][key] = [];
                                 needsUpdate = true;
-                            } else if (typeof val[stage] === 'object') {
-                                Object.keys(val[stage]).forEach(grade => {
-                                    if (!Array.isArray(val[stage][grade])) { 
-                                        val[stage][grade] = []; 
-                                        needsUpdate = true; 
-                                    }
-                                });
                             }
                         });
-                        if (needsUpdate) ref.set(val);
-                    } else ref.set(newStructure);
+                        
+                        // حذف أي مفاتيح غير رقمية أو غير صالحة
+                        Object.keys(val[stage]).forEach(key => {
+                            const gradeNum = parseInt(key);
+                            if (isNaN(gradeNum) || !grades.includes(gradeNum)) {
+                                console.warn(`⚠️ حذف مفتاح غير صالح: customSubjects/${stage}/${key}`);
+                                delete val[stage][key];
+                                needsUpdate = true;
+                            } else if (key !== String(gradeNum)) {
+                                // تصحيح المفتاح النصي إلى رقمي (احتياطي)
+                                val[stage][String(gradeNum)] = val[stage][key];
+                                delete val[stage][key];
+                                needsUpdate = true;
+                            }
+                        });
+                    });
+                    
+                    if (needsUpdate) {
+                        ref.set(val, (error) => {
+                            if (error) {
+                                console.error('❌ فشل إصلاح هيكل customSubjects:', error);
+                            } else {
+                                console.log('✅ تم إصلاح هيكل customSubjects بنجاح');
+                                // تحديث البيانات المحلية
+                                admin.dbData.customSubjects = val;
+                                admin.renderSubjectsTree();
+                                ['l','q','sim'].forEach(p => admin.updateHierarchy(p));
+                                admin.updateVisHierarchy();
+                            }
+                        });
+                    } else {
+                        // لا حاجة للتحديث، فقط تأكد من البيانات المحلية
+                        admin.dbData.customSubjects = val;
+                    }
                 });
             },
 
@@ -715,6 +751,7 @@
                 const icon = document.getElementById('sub-icon').value.trim() || 'fa-star';
                 const emoji = document.getElementById('sub-emoji').value.trim() || '📚';
                 const subjectId = 'custom_' + Date.now();
+                // استخدام المفتاح الرقمي الصحيح
                 const path = `customSubjects/${data.stage}/${data.grade}`;
                 const newSubject = { id: subjectId, name: data.name, icon, emoji, grade: data.grade, type: data.type };
 
